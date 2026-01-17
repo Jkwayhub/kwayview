@@ -1,0 +1,2452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Planner">
+    <meta name="theme-color" content="#f5f5f4">
+    <title>Planner</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg-gradient: linear-gradient(165deg, #ffffff 0%, #f0f7ff 40%, #dbeafe 100%);
+            --bg: #f0f7ff;
+            --page-bg: rgba(255, 255, 255, 0.8);
+            --page-shadow: rgba(59, 130, 246, 0.08);
+            --page-border: rgba(59, 130, 246, 0.15);
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            --accent: #2563eb;
+            --accent-light: rgba(59, 130, 246, 0.15);
+            --danger: #dc2626;
+            --success: #16a34a;
+            --glow-color: rgba(59, 130, 246, 0.2);
+        }
+
+        [data-theme="dark"] {
+            --bg-gradient: linear-gradient(165deg, #0a0a0f 0%, #0d1220 40%, #1a1a2e 100%);
+            --bg: #0f0f14;
+            --page-bg: rgba(255, 255, 255, 0.03);
+            --page-shadow: rgba(0, 0, 0, 0.3);
+            --page-border: rgba(255, 255, 255, 0.08);
+            --text-primary: #f0f0f0;
+            --text-secondary: rgba(255, 255, 255, 0.7);
+            --text-muted: rgba(255, 255, 255, 0.4);
+            --accent: #3b82f6;
+            --accent-light: rgba(59, 130, 246, 0.2);
+            --danger: #ef4444;
+            --success: #22c55e;
+            --glow-color: rgba(59, 130, 246, 0.3);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            color: var(--text-primary);
+            transition: background 0.3s, color 0.3s;
+            position: relative;
+        }
+
+        /* Ambient glow effect */
+        body::before {
+            content: '';
+            position: fixed;
+            top: -100px;
+            right: -100px;
+            width: 300px;
+            height: 300px;
+            background: var(--glow-color);
+            border-radius: 50%;
+            filter: blur(80px);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            bottom: 10%;
+            left: -100px;
+            width: 250px;
+            height: 250px;
+            background: var(--glow-color);
+            border-radius: 50%;
+            filter: blur(80px);
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.6;
+        }
+
+        .main-view {
+            padding: 20px;
+            padding-top: max(20px, env(safe-area-inset-top));
+            padding-bottom: max(20px, env(safe-area-inset-bottom));
+            min-height: 100vh;
+            position: relative;
+            z-index: 1;
+        }
+
+        .main-header {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            align-items: center;
+            margin-bottom: 16px;
+            gap: 12px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+        }
+
+        .user-name-label {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .header-center {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            justify-content: flex-end;
+        }
+
+        .menu-btn {
+            background: none;
+            border: none;
+            font-size: 1.3rem;
+            color: var(--text-primary);
+            cursor: pointer;
+            padding: 8px;
+            line-height: 1;
+            margin-right: 8px;
+        }
+
+        .logout-btn {
+            background: none;
+            border: none;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 8px 12px;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .logout-btn:hover {
+            background: var(--accent-light);
+            color: var(--text-primary);
+        }
+
+        .nav-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .nav-row button {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 8px;
+            line-height: 1;
+        }
+
+        .period-label {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            min-width: 140px;
+            text-align: center;
+        }
+
+        .theme-toggle {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 8px;
+            opacity: 0.7;
+        }
+
+        .view-switcher {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 20px;
+            background: var(--page-bg);
+            padding: 4px;
+            border-radius: 12px;
+            border: 1px solid var(--page-border);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .view-btn {
+            flex: 1;
+            background: none;
+            border: none;
+            padding: 8px 12px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .view-btn.active {
+            background: var(--accent);
+            color: white;
+        }
+
+        .notepad-stack {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .page-card {
+            background: var(--page-bg);
+            border: 1px solid var(--page-border);
+            border-radius: 12px;
+            padding: 14px 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 2px 8px var(--page-shadow);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .page-card:not(:last-child) { margin-bottom: 8px; }
+        .page-card:hover { transform: translateX(4px); }
+
+        .page-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .page-day {
+            font-weight: 500;
+            font-size: 0.95rem;
+            color: var(--text-primary);
+        }
+
+        .page-card.today .page-day { color: var(--accent); }
+
+        .page-date {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .page-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .item-count {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .page-indicator {
+            width: 6px;
+            height: 6px;
+            background: var(--accent);
+            border-radius: 50%;
+        }
+
+        .page-entries { margin-top: 10px; }
+
+        .preview-entry {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            padding: 4px 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            border-bottom: 1px solid var(--page-border);
+        }
+
+        .preview-entry.completed {
+            color: var(--text-muted);
+            text-decoration: line-through;
+        }
+
+        .preview-entry:last-child { border-bottom: none; }
+
+        .more-entries {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 6px;
+        }
+
+        /* Completed section link */
+        .completed-link {
+            background: var(--page-bg);
+            border: 1px solid var(--page-border);
+            border-radius: 12px;
+            padding: 14px 16px;
+            margin-top: 16px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .completed-link:hover { transform: translateX(4px); }
+
+        .completed-link-text {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .completed-link-count {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .calendar-grid {
+            display: grid;
+            gap: 2px;
+            background: var(--page-bg);
+            border: 1px solid var(--page-border);
+            border-radius: 16px;
+            padding: 12px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .month-grid { grid-template-columns: repeat(7, 1fr); }
+        .quarter-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .year-grid { grid-template-columns: repeat(4, 1fr); gap: 8px; }
+
+        .weekday-header {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-align: center;
+            padding: 8px 0;
+            font-weight: 500;
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            cursor: pointer;
+            border-radius: 8px;
+            position: relative;
+            color: var(--text-primary);
+        }
+
+        .calendar-day:hover { background: var(--accent-light); }
+        .calendar-day.today { background: var(--accent); color: white; }
+        .calendar-day.other-month { color: var(--text-muted); }
+
+        .calendar-day.has-entries::after {
+            content: '';
+            position: absolute;
+            bottom: 4px;
+            width: 4px;
+            height: 4px;
+            background: var(--accent);
+            border-radius: 50%;
+        }
+
+        .calendar-day.today.has-entries::after { background: white; }
+
+        .month-card, .quarter-month {
+            background: var(--bg);
+            border-radius: 8px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .month-card:hover, .quarter-month:hover { background: var(--accent-light); }
+
+        .month-card-name, .quarter-month-name {
+            font-weight: 500;
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+        }
+
+        .month-card.current .month-card-name,
+        .quarter-month.current .quarter-month-name { color: var(--accent); }
+
+        .mini-calendar {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 1px;
+        }
+
+        .mini-day {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            position: relative;
+        }
+
+        .mini-day.has-entries::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            width: 3px;
+            height: 3px;
+            background: var(--accent);
+            border-radius: 50%;
+        }
+
+        .mini-day.today { color: var(--accent); font-weight: 600; }
+
+        .day-view, .completed-view {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: var(--bg-gradient);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+        }
+
+        .day-view.open, .completed-view.open { transform: translateX(0); }
+
+        .day-header, .completed-header {
+            display: flex;
+            align-items: center;
+            padding: 16px 20px;
+            padding-top: max(16px, env(safe-area-inset-top));
+            border-bottom: 1px solid var(--page-border);
+            background: var(--page-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .back-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--accent);
+            cursor: pointer;
+            padding: 8px;
+            margin-left: -8px;
+            margin-right: 8px;
+        }
+
+        .day-title, .completed-title { flex: 1; }
+
+        .day-title-name, .completed-title-text {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: var(--text-primary);
+        }
+
+        .day-title-date, .completed-title-sub {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .day-content, .completed-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 20px;
+            padding-bottom: max(80px, calc(env(safe-area-inset-bottom) + 80px));
+        }
+
+        .entries-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .entry-item {
+            background: var(--page-bg);
+            border: 1px solid var(--page-border);
+            border-radius: 12px;
+            padding: 12px 16px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.2s ease, opacity 0.2s ease;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .entry-item.swiping {
+            transition: none;
+        }
+
+        .entry-item.deleting {
+            transform: translateX(-100%);
+            opacity: 0;
+        }
+
+        .entry-item.completing {
+            animation: completeAnim 0.3s ease forwards;
+        }
+
+        @keyframes completeAnim {
+            0% { transform: scale(1); }
+            50% { transform: scale(0.98); }
+            100% { transform: scale(1); }
+        }
+
+        .entry-item.completed {
+            opacity: 0.6;
+        }
+
+        .entry-item.completed .entry-text {
+            text-decoration: line-through;
+            color: var(--text-muted);
+        }
+
+        .delete-bg {
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 80px;
+            background: var(--danger);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transform: translateX(100%);
+        }
+
+        .entry-item.swiping .delete-bg {
+            transform: translateX(0);
+        }
+
+        .entry-checkbox {
+            width: 22px;
+            height: 22px;
+            border: 2px solid var(--page-border);
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.2s ease;
+            margin-top: 1px;
+        }
+
+        .entry-checkbox:hover {
+            border-color: var(--accent);
+        }
+
+        .entry-item.completed .entry-checkbox {
+            background: var(--success);
+            border-color: var(--success);
+        }
+
+        .entry-checkbox::after {
+            content: '';
+            width: 10px;
+            height: 10px;
+            background: var(--success);
+            border-radius: 50%;
+            opacity: 0;
+            transform: scale(0);
+            transition: all 0.2s ease;
+        }
+
+        .entry-item.completed .entry-checkbox::after {
+            opacity: 1;
+            transform: scale(1);
+            background: white;
+            width: 8px;
+            height: 8px;
+            clip-path: polygon(20% 50%, 40% 70%, 80% 30%, 85% 35%, 40% 80%, 15% 55%);
+            border-radius: 0;
+        }
+
+        .entry-text {
+            flex: 1;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            color: var(--text-primary);
+            word-break: break-word;
+            white-space: pre-wrap;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: var(--text-muted);
+            padding: 40px 20px;
+            font-size: 0.95rem;
+        }
+
+        .add-entry-bar {
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            background: var(--page-bg);
+            border-top: 1px solid var(--page-border);
+            padding: 12px 20px;
+            padding-bottom: max(12px, env(safe-area-inset-bottom));
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+            z-index: 101;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .add-entry-input {
+            flex: 1;
+            background: var(--bg);
+            border: 1px solid var(--page-border);
+            border-radius: 8px;
+            padding: 12px 16px;
+            padding-right: 8px;
+            font-size: 1rem;
+            color: var(--text-primary);
+            outline: none;
+            resize: none;
+            font-family: inherit;
+            line-height: 1.4;
+            min-height: 44px;
+            max-height: 120px;
+            overflow-y: hidden;
+            overflow-x: hidden;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        :root {
+            --scrollbar-thumb: #94a3b8;
+        }
+
+        [data-theme="dark"] {
+            --scrollbar-thumb: #475569;
+        }
+
+        .add-entry-input.scrolling {
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: var(--scrollbar-thumb) var(--bg);
+        }
+
+        .add-entry-input.scrolling::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .add-entry-input.scrolling::-webkit-scrollbar-track {
+            background: var(--bg);
+            border-radius: 0 8px 8px 0;
+        }
+
+        .add-entry-input.scrolling::-webkit-scrollbar-thumb {
+            background: var(--scrollbar-thumb);
+            border-radius: 4px;
+            border: 2px solid var(--bg);
+        }
+
+        .add-entry-input.scrolling::-webkit-scrollbar-thumb:hover {
+            background: var(--text-secondary);
+        }
+
+        .add-entry-input::-webkit-scrollbar {
+            display: none;
+            width: 0;
+        }
+
+        .add-entry-input::placeholder { color: var(--text-muted); }
+        .add-entry-input:focus { border-color: var(--accent); }
+
+        .add-entry-btn {
+            background: var(--accent);
+            border: none;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            height: 44px;
+        }
+
+        .day-nav-floating {
+            position: fixed;
+            left: 20px; right: 20px;
+            bottom: calc(90px + env(safe-area-inset-bottom));
+            display: flex;
+            justify-content: space-between;
+            pointer-events: none;
+            z-index: 101;
+            transition: bottom 0.2s ease;
+        }
+
+        .day-nav-floating button {
+            background: var(--page-bg);
+            border: 1px solid var(--page-border);
+            color: var(--accent);
+            padding: 10px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            pointer-events: auto;
+            box-shadow: 0 2px 8px var(--page-shadow);
+        }
+
+        .day-nav-floating button:disabled { opacity: 0; pointer-events: none; }
+
+        .save-indicator {
+            position: fixed;
+            top: max(80px, calc(env(safe-area-inset-top) + 60px));
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--text-primary);
+            color: var(--bg);
+            padding: 8px 16px;
+            border-radius: 16px;
+            font-size: 0.8rem;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            z-index: 200;
+        }
+
+        .save-indicator.show { opacity: 1; }
+
+        .section-divider {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin: 16px 0 8px 0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Side Panel */
+        .side-panel-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 150;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .side-panel-overlay.open {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .side-panel {
+            position: fixed;
+            top: 0;
+            left: 0 !important;
+            right: auto !important;
+            bottom: 0;
+            width: 320px;
+            max-width: 85vw;
+            background: var(--page-bg);
+            border-right: 1px solid var(--page-border);
+            border-left: none;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            z-index: 151;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            padding-top: max(20px, env(safe-area-inset-top));
+        }
+
+        .side-panel.open {
+            transform: translateX(0) !important;
+        }
+
+        .side-panel-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--page-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .side-panel-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .side-panel-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 4px;
+        }
+
+        .side-panel-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .side-panel-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px;
+            background: var(--card-bg);
+            border: 1px solid var(--page-border);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 12px;
+        }
+
+        .side-panel-item:hover {
+            transform: translateX(4px);
+            border-color: var(--accent);
+        }
+
+        .side-panel-item-icon {
+            font-size: 1.5rem;
+        }
+
+        .side-panel-item-text {
+            flex: 1;
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+        .side-panel-footer {
+            padding: 20px;
+            border-top: 1px solid var(--page-border);
+        }
+
+        /* Logout Confirmation Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 200;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.open {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .logout-modal {
+            background: var(--page-bg);
+            border: 1px solid var(--page-border);
+            border-radius: 16px;
+            padding: 32px;
+            width: 100%;
+            max-width: 400px;
+            transform: translateY(20px) scale(0.95);
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .modal-overlay.open .logout-modal {
+            transform: translateY(0) scale(1);
+        }
+
+        .logout-modal-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .logout-modal-message {
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+            line-height: 1.6;
+        }
+
+        .logout-modal-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .logout-modal-btn {
+            flex: 1;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+
+        .logout-modal-btn-cancel {
+            background: transparent;
+            color: var(--text-primary);
+            border: 1px solid var(--page-border);
+        }
+
+        .logout-modal-btn-cancel:hover {
+            background: var(--card-bg);
+        }
+
+        .logout-modal-btn-confirm {
+            background: #475569;
+            color: white;
+        }
+
+        [data-theme="light"] .logout-modal-btn-confirm {
+            background: #64748b;
+        }
+
+        .logout-modal-btn-confirm:hover {
+            background: #334155;
+            transform: translateY(-1px);
+        }
+
+        [data-theme="light"] .logout-modal-btn-confirm:hover {
+            background: #475569;
+        }
+
+        /* Account Settings Pages */
+        .account-settings-page {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--bg-gradient);
+            z-index: 160;
+            display: flex;
+            flex-direction: column;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+        }
+
+        .account-settings-page.open {
+            transform: translateX(0);
+        }
+
+        .account-settings-header {
+            display: flex;
+            align-items: center;
+            padding: 16px 20px;
+            padding-top: max(16px, env(safe-area-inset-top));
+            border-bottom: 1px solid var(--page-border);
+            background: var(--page-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .account-settings-back {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--accent);
+            cursor: pointer;
+            padding: 8px;
+            margin-left: -8px;
+            margin-right: 8px;
+        }
+
+        .account-settings-title {
+            flex: 1;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .account-settings-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px 20px;
+            padding-bottom: max(24px, env(safe-area-inset-bottom));
+        }
+
+        .form-section {
+            margin-bottom: 32px;
+        }
+
+        .form-section-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--text-primary);
+        }
+
+        .form-section-description {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .account-form-input {
+            width: 100%;
+            padding: 14px 16px;
+            background: var(--page-bg);
+            border: 1px solid var(--page-border);
+            border-radius: 10px;
+            font-size: 1rem;
+            color: var(--text-primary);
+            transition: all 0.2s ease;
+            margin-bottom: 16px;
+        }
+
+        .account-form-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .account-form-input:focus {
+            outline: none;
+            border-color: var(--accent);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        [data-theme="light"] .account-form-input:focus {
+            background: rgba(0, 0, 0, 0.02);
+        }
+
+        .account-form-btn {
+            width: 100%;
+            padding: 14px;
+            background: var(--accent);
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .account-form-btn:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+        }
+
+        .account-form-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .account-form-btn-danger {
+            background: var(--danger);
+        }
+
+        .account-form-btn-danger:hover {
+            background: #b91c1c;
+        }
+
+        .success-message {
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            color: var(--success);
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 0.9rem;
+        }
+
+        .error-message {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: var(--danger);
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-view" id="mainView">
+        <div class="main-header">
+            <div class="header-left">
+                <button class="menu-btn" id="menuBtn">☰</button>
+                <span class="user-name-label" id="userNameLabel"></span>
+            </div>
+            <div class="header-center">
+                <div class="nav-row">
+                    <button id="prevPeriod">‹</button>
+                    <span class="period-label" id="periodLabel"></span>
+                    <button id="nextPeriod">›</button>
+                </div>
+            </div>
+            <div class="header-right">
+                <button class="logout-btn" id="logoutBtn">Log out</button>
+                <button class="theme-toggle" id="themeToggle">◐</button>
+            </div>
+        </div>
+        
+        <div class="view-switcher">
+            <button class="view-btn active" data-view="week">Week</button>
+            <button class="view-btn" data-view="month">Month</button>
+            <button class="view-btn" data-view="quarter">Quarter</button>
+            <button class="view-btn" data-view="year">Year</button>
+        </div>
+
+        <div id="viewContainer"></div>
+    </div>
+
+    <div class="day-view" id="dayView">
+        <div class="day-header">
+            <button class="back-btn" id="backBtn">‹</button>
+            <div class="day-title">
+                <div class="day-title-name" id="dayTitleName"></div>
+                <div class="day-title-date" id="dayTitleDate"></div>
+            </div>
+        </div>
+        <div class="day-content">
+            <div class="entries-list" id="entriesList"></div>
+        </div>
+        <div class="day-nav-floating">
+            <button id="prevDay">← Prev</button>
+            <button id="nextDay">Next →</button>
+        </div>
+        <div class="add-entry-bar">
+            <textarea class="add-entry-input" id="addEntryInput" placeholder="Add an entry..." rows="1"></textarea>
+            <button class="add-entry-btn" id="addEntryBtn">Add</button>
+        </div>
+    </div>
+
+    <div class="completed-view" id="completedView">
+        <div class="completed-header">
+            <button class="back-btn" id="completedBackBtn">‹</button>
+            <div class="completed-title">
+                <div class="completed-title-text">Completed</div>
+                <div class="completed-title-sub" id="completedPeriodLabel"></div>
+            </div>
+        </div>
+        <div class="completed-content">
+            <div class="entries-list" id="completedEntriesList"></div>
+        </div>
+    </div>
+
+    <div class="save-indicator" id="saveIndicator">Saved</div>
+
+    <!-- Side Panel -->
+    <div class="side-panel-overlay" id="sidePanelOverlay"></div>
+    <div class="side-panel" id="sidePanel">
+        <div class="side-panel-header">
+            <div class="side-panel-title">Menu</div>
+            <button class="side-panel-close" id="sidePanelClose">×</button>
+        </div>
+        <div class="side-panel-content">
+            <div class="side-panel-item" id="homeBtn">
+                <div class="side-panel-item-icon">🏠</div>
+                <div class="side-panel-item-text">Home</div>
+            </div>
+            <div class="side-panel-item" id="onboardingHelpBtn">
+                <div class="side-panel-item-icon">📚</div>
+                <div class="side-panel-item-text">Onboarding Help</div>
+            </div>
+            <div class="side-panel-item" id="reportIssueBtn">
+                <div class="side-panel-item-icon">🐛</div>
+                <div class="side-panel-item-text">Report an Issue</div>
+            </div>
+        </div>
+        <div class="side-panel-footer">
+            <div class="side-panel-item" id="accountBtn">
+                <div class="side-panel-item-icon">⚙️</div>
+                <div class="side-panel-item-text">Account</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Account Settings Panel -->
+    <div class="side-panel" id="accountPanel">
+        <div class="side-panel-header">
+            <button class="side-panel-close" id="accountBackBtn" style="margin-right: auto;">‹</button>
+            <div class="side-panel-title">Account</div>
+            <div style="width: 32px;"></div>
+        </div>
+        <div class="side-panel-content">
+            <div class="side-panel-item" id="changeNameBtn">
+                <div class="side-panel-item-icon">👤</div>
+                <div class="side-panel-item-text">Change Name</div>
+            </div>
+            <div class="side-panel-item" id="changePasswordBtn">
+                <div class="side-panel-item-icon">🔒</div>
+                <div class="side-panel-item-text">Change Password</div>
+            </div>
+            <div class="side-panel-item" id="clearDataBtn" style="border-color: var(--danger);">
+                <div class="side-panel-item-icon" style="color: var(--danger);">🗑️</div>
+                <div class="side-panel-item-text" style="color: var(--danger);">Clear All Data</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Account Settings Pages -->
+    <div class="account-settings-page" id="changeNamePage">
+        <div class="account-settings-header">
+            <button class="account-settings-back" id="changeNameBack">‹</button>
+            <div class="account-settings-title">Change Name</div>
+        </div>
+        <div class="account-settings-content">
+            <div class="form-section">
+                <div class="form-section-title">Update Your Name</div>
+                <div class="form-section-description">This name will be displayed throughout the app (e.g., "Joshua's week").</div>
+                <input type="text" class="account-form-input" id="newNameInput" placeholder="Enter your new name" value="">
+                <div id="changeNameMessage"></div>
+                <button class="account-form-btn" id="changeNameSubmit">Update Name</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="account-settings-page" id="changePasswordPage">
+        <div class="account-settings-header">
+            <button class="account-settings-back" id="changePasswordBack">‹</button>
+            <div class="account-settings-title">Change Password</div>
+        </div>
+        <div class="account-settings-content">
+            <div class="form-section">
+                <div class="form-section-title">Update Your Password</div>
+                <div class="form-section-description">Enter your new password. It must be at least 8 characters long.</div>
+                <input type="password" class="account-form-input" id="newPasswordInput" placeholder="New password (min 8 characters)" autocomplete="new-password">
+                <input type="password" class="account-form-input" id="confirmPasswordInput" placeholder="Confirm new password" autocomplete="new-password">
+                <div id="changePasswordMessage"></div>
+                <button class="account-form-btn" id="changePasswordSubmit">Update Password</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="account-settings-page" id="clearDataPage">
+        <div class="account-settings-header">
+            <button class="account-settings-back" id="clearDataBack">‹</button>
+            <div class="account-settings-title">Clear All Data</div>
+        </div>
+        <div class="account-settings-content">
+            <div class="form-section">
+                <div class="form-section-title">⚠️ Warning</div>
+                <div class="form-section-description">This action will permanently delete all your entries and cannot be undone. Your account will remain, but all your planner data will be lost.</div>
+                <div id="clearDataMessage"></div>
+                <button class="account-form-btn account-form-btn-danger" id="clearDataConfirm">Yes, Clear All Data</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report Issue Page -->
+    <div class="account-settings-page" id="reportIssuePage">
+        <div class="account-settings-header">
+            <button class="account-settings-back" id="reportIssueBack">‹</button>
+            <div class="account-settings-title">Report an Issue</div>
+        </div>
+        <div class="account-settings-content">
+            <div class="form-section">
+                <div class="form-section-title">Help Us Improve</div>
+                <div class="form-section-description">Found a bug or have a suggestion? Let us know and we'll work on fixing it.</div>
+                <input type="text" class="account-form-input" id="issueTitleInput" placeholder="Brief description of the issue">
+                <textarea class="account-form-input" id="issueDescriptionInput" placeholder="Describe the issue in detail..." rows="6" style="resize: vertical; min-height: 120px;"></textarea>
+                <div id="reportIssueMessage"></div>
+                <button class="account-form-btn" id="reportIssueSubmit">Submit Report</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logout Confirmation Modal -->
+    <div class="modal-overlay" id="logoutModal">
+        <div class="logout-modal">
+            <h3 class="logout-modal-title">Confirm Logout</h3>
+            <p class="logout-modal-message">Are you sure you want to log out? You'll need to sign in again to access your planner.</p>
+            <div class="logout-modal-actions">
+                <button class="logout-modal-btn logout-modal-btn-cancel" id="logoutCancelBtn">No, cancel</button>
+                <button class="logout-modal-btn logout-modal-btn-confirm" id="logoutConfirmBtn">Confirm log out</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // Supabase client
+        const SUPABASE_URL = 'https://qgwvgoojboytpcmqutqs.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFnd3Znb29qYm95dHBjbXF1dHFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgyMTE4MTQsImV4cCI6MjA4Mzc4NzgxNH0.Dqw-0k5f5mcuNh7ckPb3dYMQJfck6me63uR4WF0PQV8';
+        
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let currentUser = null;
+        let entriesCache = {};
+
+        const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+        const MONTHS_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const PREVIEW_LIMIT = 3;
+
+        let currentView = 'week';
+        let currentDate = new Date();
+        let currentDayDate = null;
+        let themeMode = localStorage.getItem('themeMode') || 'auto';
+
+        // Auth check on load
+        async function initAuth() {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            
+            if (!session) {
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            // Check if onboarding is completed
+            // First check database, then fall back to localStorage
+            const { data: prefs } = await supabaseClient
+                .from('user_preferences')
+                .select('onboarding_completed')
+                .eq('user_id', session.user.id)
+                .single();
+
+            const onboardingCompleted = prefs?.onboarding_completed || localStorage.getItem('onboardingCompleted') === 'true';
+
+            // Only redirect to onboarding on first login after signup
+            if (!onboardingCompleted) {
+                window.location.href = 'onboarding.html';
+                return;
+            }
+            
+            currentUser = session.user;
+            updateUserNameLabel();
+            await loadAllEntries();
+            // Ensure week view is active and rendered
+            switchView('week');
+            
+            // Ensure side panel is positioned on the left (fix for onboarding redirect)
+            const sidePanel = document.getElementById('sidePanel');
+            const accountPanel = document.getElementById('accountPanel');
+            if (sidePanel) {
+                sidePanel.style.left = '0';
+                sidePanel.style.right = 'auto';
+            }
+            if (accountPanel) {
+                accountPanel.style.left = '0';
+                accountPanel.style.right = 'auto';
+            }
+            
+            supabaseClient.auth.onAuthStateChange((event, session) => {
+                if (event === 'SIGNED_OUT') {
+                    window.location.href = 'index.html';
+                }
+            });
+        }
+
+        async function loadAllEntries() {
+            const { data, error } = await supabaseClient
+                .from('entries')
+                .select('*')
+                .eq('user_id', currentUser.id);
+            
+            if (error) {
+                console.error('Error loading entries:', error);
+                return;
+            }
+            
+            entriesCache = {};
+            data.forEach(entry => {
+                if (!entriesCache[entry.date_key]) {
+                    entriesCache[entry.date_key] = [];
+                }
+                entriesCache[entry.date_key].push({
+                    id: entry.id,
+                    text: entry.text,
+                    completed: entry.completed,
+                    completedAt: entry.completed_at
+                });
+            });
+            
+            Object.keys(entriesCache).forEach(key => {
+                entriesCache[key].sort((a, b) => {
+                    if (a.completed === b.completed) return 0;
+                    return a.completed ? 1 : -1;
+                });
+            });
+        }
+
+        function showLogoutModal() {
+            document.getElementById('logoutModal').classList.add('open');
+        }
+
+        function hideLogoutModal() {
+            document.getElementById('logoutModal').classList.remove('open');
+        }
+
+        async function logout() {
+            await supabaseClient.auth.signOut();
+            window.location.href = 'index.html';
+        }
+
+        function updateUserNameLabel() {
+            const userNameLabel = document.getElementById('userNameLabel');
+            const userName = currentUser?.user_metadata?.name || currentUser?.email?.split('@')[0] || 'User';
+            const viewLabels = {
+                'week': 'week',
+                'month': 'month',
+                'quarter': 'quarter',
+                'year': 'year'
+            };
+            userNameLabel.textContent = `${userName}'s ${viewLabels[currentView] || 'week'}`;
+        }
+
+        function getSystemTheme() {
+            return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+
+        function applyTheme() {
+            const theme = themeMode === 'auto' ? getSystemTheme() : themeMode;
+            document.documentElement.setAttribute('data-theme', theme);
+            document.querySelector('meta[name="theme-color"]').content = theme === 'dark' ? '#0f0f0f' : '#f5f5f4';
+        }
+
+        function cycleTheme() {
+            themeMode = themeMode === 'auto' ? 'light' : themeMode === 'light' ? 'dark' : 'auto';
+            localStorage.setItem('themeMode', themeMode);
+            applyTheme();
+            document.getElementById('themeToggle').textContent = themeMode === 'auto' ? '◐' : themeMode === 'light' ? '○' : '●';
+        }
+
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+            if (themeMode === 'auto') applyTheme();
+        });
+
+        function formatDateKey(date) {
+            return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+        }
+
+        function getWeekStart(date) {
+            const d = new Date(date);
+            const day = d.getDay();
+            d.setDate(d.getDate() - day + (day === 0 ? -6 : 1));
+            d.setHours(0, 0, 0, 0);
+            return d;
+        }
+
+        function isToday(date) {
+            const today = new Date();
+            return date.getDate() === today.getDate() && date.getMonth() === today.getMonth() && date.getFullYear() === today.getFullYear();
+        }
+
+        function isSameMonth(d1, d2) {
+            return d1.getMonth() === d2.getMonth() && d1.getFullYear() === d2.getFullYear();
+        }
+
+        function getEntries(dateKey) {
+            return entriesCache[dateKey] || [];
+        }
+
+        async function addEntry(dateKey, text) {
+            const { data, error } = await supabaseClient
+                .from('entries')
+                .insert({
+                    user_id: currentUser.id,
+                    date_key: dateKey,
+                    text: text.trim(),
+                    completed: false
+                })
+                .select()
+                .single();
+            
+            if (error) {
+                console.error('Error adding entry:', error);
+                return;
+            }
+            
+            if (!entriesCache[dateKey]) {
+                entriesCache[dateKey] = [];
+            }
+            entriesCache[dateKey].unshift({
+                id: data.id,
+                text: data.text,
+                completed: data.completed,
+                completedAt: data.completed_at
+            });
+            
+            showSaveIndicator();
+        }
+
+        async function toggleEntry(dateKey, entryId) {
+            const entries = entriesCache[dateKey];
+            const entry = entries.find(e => e.id === entryId);
+            if (!entry) return;
+            
+            const newCompleted = !entry.completed;
+            const completedAt = newCompleted ? new Date().toISOString() : null;
+            
+            const { error } = await supabaseClient
+                .from('entries')
+                .update({ 
+                    completed: newCompleted,
+                    completed_at: completedAt
+                })
+                .eq('id', entryId);
+            
+            if (error) {
+                console.error('Error toggling entry:', error);
+                return;
+            }
+            
+            entry.completed = newCompleted;
+            entry.completedAt = completedAt;
+            
+            entriesCache[dateKey].sort((a, b) => {
+                if (a.completed === b.completed) return 0;
+                return a.completed ? 1 : -1;
+            });
+            
+            showSaveIndicator();
+        }
+
+        async function deleteEntry(dateKey, entryId) {
+            const { error } = await supabaseClient
+                .from('entries')
+                .delete()
+                .eq('id', entryId);
+            
+            if (error) {
+                console.error('Error deleting entry:', error);
+                return;
+            }
+            
+            entriesCache[dateKey] = entriesCache[dateKey].filter(e => e.id !== entryId);
+            if (entriesCache[dateKey].length === 0) {
+                delete entriesCache[dateKey];
+            }
+            
+            showSaveIndicator();
+        }
+
+        function hasEntries(dateKey) {
+            const entries = entriesCache[dateKey];
+            return entries && entries.some(e => !e.completed);
+        }
+
+        function getCompletedCount(dateKeys) {
+            let count = 0;
+            dateKeys.forEach(key => {
+                count += getEntries(key).filter(e => e.completed).length;
+            });
+            return count;
+        }
+
+        function getDateKeysForPeriod() {
+            const keys = [];
+            switch (currentView) {
+                case 'week':
+                    const weekStart = getWeekStart(currentDate);
+                    for (let i = 0; i < 7; i++) {
+                        const d = new Date(weekStart);
+                        d.setDate(d.getDate() + i);
+                        keys.push(formatDateKey(d));
+                    }
+                    break;
+                case 'month':
+                    const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
+                    for (let day = 1; day <= daysInMonth; day++) {
+                        keys.push(formatDateKey(new Date(currentDate.getFullYear(), currentDate.getMonth(), day)));
+                    }
+                    break;
+                case 'quarter':
+                    const quarter = Math.floor(currentDate.getMonth() / 3);
+                    for (let m = 0; m < 3; m++) {
+                        const monthDate = new Date(currentDate.getFullYear(), quarter * 3 + m, 1);
+                        const days = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0).getDate();
+                        for (let day = 1; day <= days; day++) {
+                            keys.push(formatDateKey(new Date(monthDate.getFullYear(), monthDate.getMonth(), day)));
+                        }
+                    }
+                    break;
+                case 'year':
+                    for (let m = 0; m < 12; m++) {
+                        const days = new Date(currentDate.getFullYear(), m + 1, 0).getDate();
+                        for (let day = 1; day <= days; day++) {
+                            keys.push(formatDateKey(new Date(currentDate.getFullYear(), m, day)));
+                        }
+                    }
+                    break;
+            }
+            return keys;
+        }
+
+        function showSaveIndicator() {
+            const indicator = document.getElementById('saveIndicator');
+            indicator.classList.add('show');
+            setTimeout(() => indicator.classList.remove('show'), 1500);
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function updatePeriodLabel() {
+            const label = document.getElementById('periodLabel');
+            switch (currentView) {
+                case 'week':
+                    const weekStart = getWeekStart(currentDate);
+                    const weekEnd = new Date(weekStart);
+                    weekEnd.setDate(weekEnd.getDate() + 6);
+                    label.textContent = isSameMonth(weekStart, weekEnd) 
+                        ? `${weekStart.getDate()} – ${weekEnd.getDate()} ${MONTHS_SHORT[weekStart.getMonth()]}`
+                        : `${weekStart.getDate()} ${MONTHS_SHORT[weekStart.getMonth()]} – ${weekEnd.getDate()} ${MONTHS_SHORT[weekEnd.getMonth()]}`;
+                    break;
+                case 'month':
+                    label.textContent = `${MONTHS[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
+                    break;
+                case 'quarter':
+                    label.textContent = `Q${Math.floor(currentDate.getMonth() / 3) + 1} ${currentDate.getFullYear()}`;
+                    break;
+                case 'year':
+                    label.textContent = currentDate.getFullYear().toString();
+                    break;
+            }
+        }
+
+        function navigate(direction) {
+            const delta = direction === 'prev' ? -1 : 1;
+            switch (currentView) {
+                case 'week': currentDate.setDate(currentDate.getDate() + (delta * 7)); break;
+                case 'month': currentDate.setMonth(currentDate.getMonth() + delta); break;
+                case 'quarter': currentDate.setMonth(currentDate.getMonth() + (delta * 3)); break;
+                case 'year': currentDate.setFullYear(currentDate.getFullYear() + delta); break;
+            }
+            render();
+        }
+
+        function render() {
+            updatePeriodLabel();
+            const container = document.getElementById('viewContainer');
+            switch (currentView) {
+                case 'week': renderWeekView(container); break;
+                case 'month': renderMonthView(container); break;
+                case 'quarter': renderQuarterView(container); break;
+                case 'year': renderYearView(container); break;
+            }
+        }
+
+        function renderWeekView(container) {
+            const weekStart = getWeekStart(currentDate);
+            let html = '<div class="notepad-stack">';
+            
+            for (let i = 0; i < 7; i++) {
+                const date = new Date(weekStart);
+                date.setDate(date.getDate() + i);
+                const dateKey = formatDateKey(date);
+                const entries = getEntries(dateKey);
+                const incompleteEntries = entries.filter(e => !e.completed);
+                const entryCount = incompleteEntries.length;
+                const isTodayDate = isToday(date);
+                
+                html += `<div class="page-card${isTodayDate ? ' today' : ''}" data-date="${dateKey}">
+                    <div class="page-card-header">
+                        <div>
+                            <div class="page-day">${DAYS[date.getDay()]}</div>
+                            <div class="page-date">${date.getDate()} ${MONTHS_SHORT[date.getMonth()]}</div>
+                        </div>
+                        <div class="page-meta">
+                            ${entryCount > 0 ? `<span class="item-count">${entryCount} item${entryCount !== 1 ? 's' : ''}</span>` : ''}
+                            ${entryCount > 0 ? '<div class="page-indicator"></div>' : ''}
+                        </div>
+                    </div>`;
+                
+                if (entryCount > 0) {
+                    html += '<div class="page-entries">';
+                    incompleteEntries.slice(0, PREVIEW_LIMIT).forEach(entry => {
+                        html += `<div class="preview-entry">${escapeHtml(entry.text.split('\n')[0])}</div>`;
+                    });
+                    if (entryCount > PREVIEW_LIMIT) {
+                        html += `<div class="more-entries">+${entryCount - PREVIEW_LIMIT} more</div>`;
+                    }
+                    html += '</div>';
+                }
+                html += '</div>';
+            }
+            
+            html += '</div>';
+            
+            // Completed link
+            const completedCount = getCompletedCount(getDateKeysForPeriod());
+            if (completedCount > 0) {
+                html += `<div class="completed-link" id="completedLink">
+                    <span class="completed-link-text">Completed</span>
+                    <span class="completed-link-count">${completedCount} item${completedCount !== 1 ? 's' : ''} ›</span>
+                </div>`;
+            }
+            
+            container.innerHTML = html;
+            container.querySelectorAll('.page-card').forEach(card => {
+                card.addEventListener('click', () => openDay(card.dataset.date));
+            });
+            
+            const completedLink = container.querySelector('#completedLink');
+            if (completedLink) {
+                completedLink.addEventListener('click', openCompletedView);
+            }
+        }
+
+        function renderMonthView(container) {
+            const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay();
+            const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
+            const startOffset = firstDay === 0 ? 6 : firstDay - 1;
+            
+            let html = '<div class="calendar-grid month-grid">';
+            ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].forEach(day => {
+                html += `<div class="weekday-header">${day}</div>`;
+            });
+            
+            const prevMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 0);
+            for (let i = startOffset - 1; i >= 0; i--) {
+                const day = prevMonth.getDate() - i;
+                const date = new Date(prevMonth.getFullYear(), prevMonth.getMonth(), day);
+                const dateKey = formatDateKey(date);
+                html += `<div class="calendar-day other-month${hasEntries(dateKey) ? ' has-entries' : ''}" data-date="${dateKey}">${day}</div>`;
+            }
+            
+            for (let day = 1; day <= daysInMonth; day++) {
+                const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+                const dateKey = formatDateKey(date);
+                html += `<div class="calendar-day${isToday(date) ? ' today' : ''}${hasEntries(dateKey) ? ' has-entries' : ''}" data-date="${dateKey}">${day}</div>`;
+            }
+            
+            const totalCells = startOffset + daysInMonth;
+            const remaining = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
+            for (let day = 1; day <= remaining; day++) {
+                const date = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, day);
+                const dateKey = formatDateKey(date);
+                html += `<div class="calendar-day other-month${hasEntries(dateKey) ? ' has-entries' : ''}" data-date="${dateKey}">${day}</div>`;
+            }
+            
+            html += '</div>';
+            
+            const completedCount = getCompletedCount(getDateKeysForPeriod());
+            if (completedCount > 0) {
+                html += `<div class="completed-link" id="completedLink">
+                    <span class="completed-link-text">Completed</span>
+                    <span class="completed-link-count">${completedCount} item${completedCount !== 1 ? 's' : ''} ›</span>
+                </div>`;
+            }
+            
+            container.innerHTML = html;
+            container.querySelectorAll('.calendar-day').forEach(cell => {
+                cell.addEventListener('click', () => openDay(cell.dataset.date));
+            });
+            
+            const completedLink = container.querySelector('#completedLink');
+            if (completedLink) {
+                completedLink.addEventListener('click', openCompletedView);
+            }
+        }
+
+        function renderQuarterView(container) {
+            const quarter = Math.floor(currentDate.getMonth() / 3);
+            const quarterStart = new Date(currentDate.getFullYear(), quarter * 3, 1);
+            let html = '<div class="calendar-grid quarter-grid">';
+            
+            for (let i = 0; i < 3; i++) {
+                const monthDate = new Date(quarterStart.getFullYear(), quarterStart.getMonth() + i, 1);
+                const isCurrent = isSameMonth(monthDate, new Date());
+                html += `<div class="quarter-month${isCurrent ? ' current' : ''}" data-month="${monthDate.getMonth()}" data-year="${monthDate.getFullYear()}">
+                    <div class="quarter-month-name">${MONTHS_SHORT[monthDate.getMonth()]}</div>
+                    ${renderMiniCalendar(monthDate)}
+                </div>`;
+            }
+            
+            html += '</div>';
+            
+            const completedCount = getCompletedCount(getDateKeysForPeriod());
+            if (completedCount > 0) {
+                html += `<div class="completed-link" id="completedLink">
+                    <span class="completed-link-text">Completed</span>
+                    <span class="completed-link-count">${completedCount} item${completedCount !== 1 ? 's' : ''} ›</span>
+                </div>`;
+            }
+            
+            container.innerHTML = html;
+            container.querySelectorAll('.quarter-month').forEach(card => {
+                card.addEventListener('click', () => {
+                    currentDate = new Date(parseInt(card.dataset.year), parseInt(card.dataset.month), 1);
+                    switchView('month');
+                });
+            });
+            
+            const completedLink = container.querySelector('#completedLink');
+            if (completedLink) {
+                completedLink.addEventListener('click', openCompletedView);
+            }
+        }
+
+        function renderYearView(container) {
+            let html = '<div class="calendar-grid year-grid">';
+            
+            for (let month = 0; month < 12; month++) {
+                const monthDate = new Date(currentDate.getFullYear(), month, 1);
+                const isCurrent = isSameMonth(monthDate, new Date());
+                html += `<div class="month-card${isCurrent ? ' current' : ''}" data-month="${month}">
+                    <div class="month-card-name">${MONTHS_SHORT[month]}</div>
+                    ${renderMiniCalendar(monthDate)}
+                </div>`;
+            }
+            
+            html += '</div>';
+            
+            const completedCount = getCompletedCount(getDateKeysForPeriod());
+            if (completedCount > 0) {
+                html += `<div class="completed-link" id="completedLink">
+                    <span class="completed-link-text">Completed</span>
+                    <span class="completed-link-count">${completedCount} item${completedCount !== 1 ? 's' : ''} ›</span>
+                </div>`;
+            }
+            
+            container.innerHTML = html;
+            container.querySelectorAll('.month-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    currentDate.setMonth(parseInt(card.dataset.month));
+                    switchView('month');
+                });
+            });
+            
+            const completedLink = container.querySelector('#completedLink');
+            if (completedLink) {
+                completedLink.addEventListener('click', openCompletedView);
+            }
+        }
+
+        function renderMiniCalendar(monthDate) {
+            const firstDay = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1).getDay();
+            const daysInMonth = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0).getDate();
+            const startOffset = firstDay === 0 ? 6 : firstDay - 1;
+            
+            let html = '<div class="mini-calendar">';
+            for (let i = 0; i < startOffset; i++) html += '<div class="mini-day"></div>';
+            
+            for (let day = 1; day <= daysInMonth; day++) {
+                const date = new Date(monthDate.getFullYear(), monthDate.getMonth(), day);
+                const dateKey = formatDateKey(date);
+                html += `<div class="mini-day${isToday(date) ? ' today' : ''}${hasEntries(dateKey) ? ' has-entries' : ''}">${day}</div>`;
+            }
+            
+            html += '</div>';
+            return html;
+        }
+
+        function switchView(view) {
+            currentView = view;
+            document.querySelectorAll('.view-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.view === view);
+            });
+            updateUserNameLabel();
+            render();
+        }
+
+        function openDay(dateKey) {
+            currentDayDate = dateKey;
+            const [year, month, day] = dateKey.split('-').map(Number);
+            const date = new Date(year, month - 1, day);
+            
+            document.getElementById('dayTitleName').textContent = DAYS[date.getDay()];
+            document.getElementById('dayTitleDate').textContent = `${date.getDate()} ${MONTHS[date.getMonth()]} ${date.getFullYear()}`;
+            
+            renderDayEntries();
+            document.getElementById('dayView').classList.add('open');
+            document.getElementById('addEntryInput').value = '';
+            autoResizeInput();
+        }
+
+        function renderDayEntries() {
+            const entries = getEntries(currentDayDate);
+            const list = document.getElementById('entriesList');
+            
+            const incompleteEntries = entries.filter(e => !e.completed);
+            const completedEntries = entries.filter(e => e.completed);
+            
+            if (entries.length === 0) {
+                list.innerHTML = '<div class="empty-state">No entries yet.<br>Add one below.</div>';
+                return;
+            }
+            
+            let html = '';
+            
+            incompleteEntries.forEach(entry => {
+                html += renderEntryItem(entry, false);
+            });
+            
+            if (completedEntries.length > 0) {
+                html += `<div class="section-divider">Completed</div>`;
+                completedEntries.forEach(entry => {
+                    html += renderEntryItem(entry, true);
+                });
+            }
+            
+            list.innerHTML = html;
+            setupEntryListeners();
+        }
+
+        function renderEntryItem(entry, isCompleted) {
+            return `<div class="entry-item${isCompleted ? ' completed' : ''}" data-id="${entry.id}">
+                <div class="entry-checkbox" data-id="${entry.id}"></div>
+                <div class="entry-text">${escapeHtml(entry.text)}</div>
+                <div class="delete-bg">Delete</div>
+            </div>`;
+        }
+
+        function setupEntryListeners() {
+            const list = document.getElementById('entriesList');
+            
+            list.querySelectorAll('.entry-checkbox').forEach(checkbox => {
+                checkbox.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    const id = parseInt(checkbox.dataset.id);
+                    const item = checkbox.closest('.entry-item');
+                    item.classList.add('completing');
+                    setTimeout(async () => {
+                        await toggleEntry(currentDayDate, id);
+                        renderDayEntries();
+                    }, 300);
+                });
+            });
+            
+            // Swipe to delete
+            list.querySelectorAll('.entry-item').forEach(item => {
+                let startX = 0;
+                let currentX = 0;
+                let isDragging = false;
+                
+                item.addEventListener('touchstart', (e) => {
+                    startX = e.touches[0].clientX;
+                    isDragging = true;
+                    item.classList.remove('swiping');
+                }, { passive: true });
+                
+                item.addEventListener('touchmove', (e) => {
+                    if (!isDragging) return;
+                    currentX = e.touches[0].clientX;
+                    const diff = startX - currentX;
+                    
+                    if (diff > 10) {
+                        item.classList.add('swiping');
+                        const translate = Math.min(Math.max(0, diff), 80);
+                        item.style.transform = `translateX(-${translate}px)`;
+                    }
+                }, { passive: true });
+                
+                item.addEventListener('touchend', async () => {
+                    if (!isDragging) return;
+                    isDragging = false;
+                    const diff = startX - currentX;
+                    
+                    if (diff > 60) {
+                        item.classList.add('deleting');
+                        setTimeout(async () => {
+                            await deleteEntry(currentDayDate, parseInt(item.dataset.id));
+                            renderDayEntries();
+                        }, 200);
+                    } else {
+                        item.style.transform = '';
+                        item.classList.remove('swiping');
+                    }
+                }, { passive: true });
+            });
+        }
+
+        function openCompletedView() {
+            const periodLabel = document.getElementById('completedPeriodLabel');
+            periodLabel.textContent = document.getElementById('periodLabel').textContent;
+            
+            const dateKeys = getDateKeysForPeriod();
+            const completedEntries = [];
+            
+            dateKeys.forEach(key => {
+                const entries = getEntries(key).filter(e => e.completed);
+                entries.forEach(e => {
+                    const [year, month, day] = key.split('-').map(Number);
+                    completedEntries.push({
+                        ...e,
+                        dateKey: key,
+                        dateLabel: `${day} ${MONTHS_SHORT[month - 1]}`
+                    });
+                });
+            });
+            
+            const list = document.getElementById('completedEntriesList');
+            
+            if (completedEntries.length === 0) {
+                list.innerHTML = '<div class="empty-state">No completed items yet.</div>';
+            } else {
+                list.innerHTML = completedEntries.map(entry => `
+                    <div class="entry-item completed" data-id="${entry.id}" data-date="${entry.dateKey}">
+                        <div class="entry-checkbox" data-id="${entry.id}" data-date="${entry.dateKey}"></div>
+                        <div class="entry-text">${escapeHtml(entry.text)}<br><small style="color: var(--text-muted)">${entry.dateLabel}</small></div>
+                        <div class="delete-bg">Delete</div>
+                    </div>
+                `).join('');
+                
+                // Setup listeners for uncompleting and deleting
+                list.querySelectorAll('.entry-checkbox').forEach(checkbox => {
+                    checkbox.addEventListener('click', async () => {
+                        const id = parseInt(checkbox.dataset.id);
+                        const dateKey = checkbox.dataset.date;
+                        await toggleEntry(dateKey, id);
+                        openCompletedView();
+                    });
+                });
+                
+                list.querySelectorAll('.entry-item').forEach(item => {
+                    let startX = 0;
+                    let currentX = 0;
+                    let isDragging = false;
+                    
+                    item.addEventListener('touchstart', (e) => {
+                        startX = e.touches[0].clientX;
+                        isDragging = true;
+                    }, { passive: true });
+                    
+                    item.addEventListener('touchmove', (e) => {
+                        if (!isDragging) return;
+                        currentX = e.touches[0].clientX;
+                        const diff = startX - currentX;
+                        if (diff > 10) {
+                            item.classList.add('swiping');
+                            item.style.transform = `translateX(-${Math.min(diff, 80)}px)`;
+                        }
+                    }, { passive: true });
+                    
+                    item.addEventListener('touchend', async () => {
+                        if (!isDragging) return;
+                        isDragging = false;
+                        if (startX - currentX > 60) {
+                            item.classList.add('deleting');
+                            setTimeout(async () => {
+                                await deleteEntry(item.dataset.date, parseInt(item.dataset.id));
+                                openCompletedView();
+                            }, 200);
+                        } else {
+                            item.style.transform = '';
+                            item.classList.remove('swiping');
+                        }
+                    }, { passive: true });
+                });
+            }
+            
+            document.getElementById('completedView').classList.add('open');
+        }
+
+        function closeCompletedView() {
+            document.getElementById('completedView').classList.remove('open');
+            render();
+        }
+
+        function navigateDay(direction) {
+            const [year, month, day] = currentDayDate.split('-').map(Number);
+            const date = new Date(year, month - 1, day);
+            date.setDate(date.getDate() + (direction === 'prev' ? -1 : 1));
+            openDay(formatDateKey(date));
+        }
+
+        function closeDay() {
+            document.getElementById('dayView').classList.remove('open');
+            render();
+        }
+
+        function autoResizeInput() {
+            const input = document.getElementById('addEntryInput');
+            input.style.height = 'auto';
+            const scrollHeight = input.scrollHeight;
+            const newHeight = Math.min(scrollHeight, 120);
+            input.style.height = newHeight + 'px';
+
+            // Show scrollbar only when content actually overflows the max height
+            if (scrollHeight > 120) {
+                input.classList.add('scrolling');
+            } else {
+                input.classList.remove('scrolling');
+            }
+
+            // Dynamically position the day navigation buttons above the input
+            const dayNavButtons = document.querySelector('.day-nav-floating');
+            if (dayNavButtons) {
+                // Calculate: input bar padding (12px top + 12px bottom) + input height + spacing (20px)
+                const inputBarPadding = 24;
+                const spacing = 20;
+                const safeAreaBottom = 'env(safe-area-inset-bottom)';
+                const totalOffset = inputBarPadding + newHeight + spacing;
+                dayNavButtons.style.bottom = `calc(${totalOffset}px + ${safeAreaBottom})`;
+            }
+        }
+
+        function setupEventListeners() {
+            // Event listeners
+            document.getElementById('prevPeriod').addEventListener('click', () => navigate('prev'));
+        document.getElementById('nextPeriod').addEventListener('click', () => navigate('next'));
+        document.getElementById('themeToggle').addEventListener('click', cycleTheme);
+        document.getElementById('logoutBtn').addEventListener('click', showLogoutModal);
+        document.getElementById('logoutCancelBtn').addEventListener('click', hideLogoutModal);
+        document.getElementById('logoutConfirmBtn').addEventListener('click', logout);
+        
+        // Side panel
+        document.getElementById('menuBtn').addEventListener('click', () => {
+            document.getElementById('sidePanelOverlay').classList.add('open');
+            document.getElementById('sidePanel').classList.add('open');
+        });
+        
+        document.getElementById('sidePanelClose').addEventListener('click', () => {
+            document.getElementById('sidePanelOverlay').classList.remove('open');
+            document.getElementById('sidePanel').classList.remove('open');
+        });
+        
+        document.getElementById('sidePanelOverlay').addEventListener('click', () => {
+            document.getElementById('sidePanelOverlay').classList.remove('open');
+            document.getElementById('sidePanel').classList.remove('open');
+            document.getElementById('accountPanel').classList.remove('open');
+        });
+        
+        document.getElementById('homeBtn').addEventListener('click', () => {
+            switchView('week');
+            document.getElementById('sidePanelOverlay').classList.remove('open');
+            document.getElementById('sidePanel').classList.remove('open');
+        });
+        
+        document.getElementById('accountBtn').addEventListener('click', () => {
+            document.getElementById('sidePanel').classList.remove('open');
+            document.getElementById('sidePanelOverlay').classList.add('open');
+            document.getElementById('accountPanel').classList.add('open');
+        });
+        
+        document.getElementById('accountBackBtn').addEventListener('click', () => {
+            document.getElementById('accountPanel').classList.remove('open');
+            document.getElementById('sidePanel').classList.add('open');
+            // Keep overlay open since side panel is still open
+        });
+        
+        // Account settings - open pages
+        document.getElementById('changeNameBtn').addEventListener('click', () => {
+            document.getElementById('sidePanelOverlay').classList.remove('open');
+            document.getElementById('accountPanel').classList.remove('open');
+            document.getElementById('changeNamePage').classList.add('open');
+            document.getElementById('newNameInput').value = currentUser?.user_metadata?.name || '';
+            document.getElementById('changeNameMessage').innerHTML = '';
+        });
+        
+        document.getElementById('changePasswordBtn').addEventListener('click', () => {
+            document.getElementById('sidePanelOverlay').classList.remove('open');
+            document.getElementById('accountPanel').classList.remove('open');
+            document.getElementById('changePasswordPage').classList.add('open');
+            document.getElementById('newPasswordInput').value = '';
+            document.getElementById('confirmPasswordInput').value = '';
+            document.getElementById('changePasswordMessage').innerHTML = '';
+        });
+        
+        document.getElementById('clearDataBtn').addEventListener('click', () => {
+            document.getElementById('sidePanelOverlay').classList.remove('open');
+            document.getElementById('accountPanel').classList.remove('open');
+            document.getElementById('clearDataPage').classList.add('open');
+            document.getElementById('clearDataMessage').innerHTML = '';
+        });
+        
+        // Account settings - back buttons
+        document.getElementById('changeNameBack').addEventListener('click', () => {
+            document.getElementById('changeNamePage').classList.remove('open');
+            document.getElementById('sidePanelOverlay').classList.add('open');
+            document.getElementById('accountPanel').classList.add('open');
+        });
+        
+        document.getElementById('changePasswordBack').addEventListener('click', () => {
+            document.getElementById('changePasswordPage').classList.remove('open');
+            document.getElementById('sidePanelOverlay').classList.add('open');
+            document.getElementById('accountPanel').classList.add('open');
+        });
+        
+        document.getElementById('clearDataBack').addEventListener('click', () => {
+            document.getElementById('clearDataPage').classList.remove('open');
+            document.getElementById('sidePanelOverlay').classList.add('open');
+            document.getElementById('accountPanel').classList.add('open');
+        });
+        
+        // Account settings - submit handlers
+        document.getElementById('changeNameSubmit').addEventListener('click', async () => {
+            const newName = document.getElementById('newNameInput').value.trim();
+            const messageDiv = document.getElementById('changeNameMessage');
+            
+            if (!newName) {
+                messageDiv.innerHTML = '<div class="error-message">Please enter a name.</div>';
+                return;
+            }
+            
+            const btn = document.getElementById('changeNameSubmit');
+            btn.disabled = true;
+            btn.textContent = 'Updating...';
+            
+            const { error } = await supabaseClient.auth.updateUser({
+                data: { name: newName }
+            });
+            
+            if (error) {
+                messageDiv.innerHTML = `<div class="error-message">Error: ${error.message}</div>`;
+                btn.disabled = false;
+                btn.textContent = 'Update Name';
+            } else {
+                currentUser.user_metadata.name = newName;
+                updateUserNameLabel();
+                messageDiv.innerHTML = '<div class="success-message">Name updated successfully!</div>';
+                setTimeout(() => {
+                    document.getElementById('changeNamePage').classList.remove('open');
+                    document.getElementById('accountPanel').classList.add('open');
+                }, 1500);
+            }
+        });
+        
+        document.getElementById('changePasswordSubmit').addEventListener('click', async () => {
+            const newPassword = document.getElementById('newPasswordInput').value;
+            const confirmPassword = document.getElementById('confirmPasswordInput').value;
+            const messageDiv = document.getElementById('changePasswordMessage');
+            
+            if (!newPassword || newPassword.length < 8) {
+                messageDiv.innerHTML = '<div class="error-message">Password must be at least 8 characters long.</div>';
+                return;
+            }
+            
+            if (newPassword !== confirmPassword) {
+                messageDiv.innerHTML = '<div class="error-message">Passwords do not match.</div>';
+                return;
+            }
+            
+            const btn = document.getElementById('changePasswordSubmit');
+            btn.disabled = true;
+            btn.textContent = 'Updating...';
+            
+            const { error } = await supabaseClient.auth.updateUser({
+                password: newPassword
+            });
+            
+            if (error) {
+                messageDiv.innerHTML = `<div class="error-message">Error: ${error.message}</div>`;
+                btn.disabled = false;
+                btn.textContent = 'Update Password';
+            } else {
+                messageDiv.innerHTML = '<div class="success-message">Password updated successfully!</div>';
+                document.getElementById('newPasswordInput').value = '';
+                document.getElementById('confirmPasswordInput').value = '';
+                setTimeout(() => {
+                    document.getElementById('changePasswordPage').classList.remove('open');
+                    document.getElementById('accountPanel').classList.add('open');
+                }, 1500);
+            }
+        });
+        
+        document.getElementById('clearDataConfirm').addEventListener('click', async () => {
+            if (!confirm('Are you absolutely sure? This will permanently delete ALL your entries and cannot be undone.')) {
+                return;
+            }
+            
+            const btn = document.getElementById('clearDataConfirm');
+            const messageDiv = document.getElementById('clearDataMessage');
+            btn.disabled = true;
+            btn.textContent = 'Clearing...';
+            
+            const { error } = await supabaseClient
+                .from('entries')
+                .delete()
+                .eq('user_id', currentUser.id);
+            
+            if (error) {
+                messageDiv.innerHTML = `<div class="error-message">Error: ${error.message}</div>`;
+                btn.disabled = false;
+                btn.textContent = 'Yes, Clear All Data';
+            } else {
+                entriesCache = {};
+                render();
+                messageDiv.innerHTML = '<div class="success-message">All data cleared successfully!</div>';
+                setTimeout(() => {
+                    document.getElementById('clearDataPage').classList.remove('open');
+                    document.getElementById('accountPanel').classList.add('open');
+                }, 1500);
+            }
+        });
+        
+        // Onboarding help
+        document.getElementById('onboardingHelpBtn').addEventListener('click', () => {
+            document.getElementById('sidePanelOverlay').classList.remove('open');
+            document.getElementById('sidePanel').classList.remove('open');
+            window.location.href = 'onboarding.html';
+        });
+        
+        // Report issue
+        document.getElementById('reportIssueBtn').addEventListener('click', () => {
+            document.getElementById('sidePanel').classList.remove('open');
+            document.getElementById('reportIssuePage').classList.add('open');
+            document.getElementById('issueTitleInput').value = '';
+            document.getElementById('issueDescriptionInput').value = '';
+            document.getElementById('reportIssueMessage').innerHTML = '';
+        });
+        
+        document.getElementById('reportIssueBack').addEventListener('click', () => {
+            document.getElementById('reportIssuePage').classList.remove('open');
+            document.getElementById('sidePanel').classList.add('open');
+        });
+        
+        document.getElementById('reportIssueSubmit').addEventListener('click', async () => {
+            const title = document.getElementById('issueTitleInput').value.trim();
+            const description = document.getElementById('issueDescriptionInput').value.trim();
+            const messageDiv = document.getElementById('reportIssueMessage');
+            
+            if (!title || !description) {
+                messageDiv.innerHTML = '<div class="error-message">Please fill in both title and description.</div>';
+                return;
+            }
+            
+            const btn = document.getElementById('reportIssueSubmit');
+            btn.disabled = true;
+            btn.textContent = 'Submitting...';
+            
+            // Store issue report (you can integrate with a backend service here)
+            // For now, we'll just show a success message
+            // In production, you'd send this to your backend/email service
+            const issueReport = {
+                userId: currentUser.id,
+                userEmail: currentUser.email,
+                title: title,
+                description: description,
+                timestamp: new Date().toISOString(),
+                userAgent: navigator.userAgent
+            };
+            
+            // Log to console for now (replace with actual API call)
+            console.log('Issue Report:', issueReport);
+            
+            // Simulate API call
+            setTimeout(() => {
+                messageDiv.innerHTML = '<div class="success-message">Thank you for your report! We\'ll look into this issue.</div>';
+                document.getElementById('issueTitleInput').value = '';
+                document.getElementById('issueDescriptionInput').value = '';
+                setTimeout(() => {
+                    document.getElementById('reportIssuePage').classList.remove('open');
+                    document.getElementById('sidePanel').classList.add('open');
+                }, 2000);
+            }, 500);
+        });
+        document.getElementById('backBtn').addEventListener('click', closeDay);
+        document.getElementById('completedBackBtn').addEventListener('click', closeCompletedView);
+        document.getElementById('prevDay').addEventListener('click', () => navigateDay('prev'));
+        document.getElementById('nextDay').addEventListener('click', () => navigateDay('next'));
+
+        document.querySelectorAll('.view-btn').forEach(btn => {
+            btn.addEventListener('click', () => switchView(btn.dataset.view));
+        });
+
+        const addInput = document.getElementById('addEntryInput');
+        const addBtn = document.getElementById('addEntryBtn');
+
+        addInput.addEventListener('input', autoResizeInput);
+
+        addBtn.addEventListener('click', async () => {
+            if (addInput.value.trim()) {
+                await addEntry(currentDayDate, addInput.value);
+                addInput.value = '';
+                autoResizeInput();
+                renderDayEntries();
+            }
+        });
+
+        // Swipe to go back on day view
+        let touchStartX = 0;
+        document.getElementById('dayView').addEventListener('touchstart', (e) => {
+            touchStartX = e.touches[0].clientX;
+        }, { passive: true });
+
+        document.getElementById('dayView').addEventListener('touchend', (e) => {
+            if (e.changedTouches[0].clientX - touchStartX > 80 && touchStartX < 50) closeDay();
+        }, { passive: true });
+
+        // Swipe to go back on completed view
+        document.getElementById('completedView').addEventListener('touchstart', (e) => {
+            touchStartX = e.touches[0].clientX;
+        }, { passive: true });
+
+        document.getElementById('completedView').addEventListener('touchend', (e) => {
+            if (e.changedTouches[0].clientX - touchStartX > 80 && touchStartX < 50) closeCompletedView();
+        }, { passive: true });
+        }
+
+        // Ensure side panels are always on the left (fix for page reloads)
+        function ensurePanelPosition() {
+            const sidePanel = document.getElementById('sidePanel');
+            const accountPanel = document.getElementById('accountPanel');
+            if (sidePanel) {
+                sidePanel.style.left = '0';
+                sidePanel.style.right = 'auto';
+            }
+            if (accountPanel) {
+                accountPanel.style.left = '0';
+                accountPanel.style.right = 'auto';
+            }
+        }
+
+        // Wait for DOM to be ready before initializing
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeApp);
+        } else {
+            // DOM already loaded
+            initializeApp();
+        }
+
+        function initializeApp() {
+            // Setup all event listeners first
+            setupEventListeners();
+
+            // Initialize
+            applyTheme();
+            document.getElementById('themeToggle').textContent = themeMode === 'auto' ? '◐' : themeMode === 'light' ? '○' : '●';
+
+            // Run on page load and after a short delay to catch any late-loading issues
+            ensurePanelPosition();
+            window.addEventListener('load', ensurePanelPosition);
+            setTimeout(ensurePanelPosition, 100);
+
+            // Start auth check and load data
+            initAuth();
+        }
+
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').catch(() => {});
+        }
+    </script>
+</body>
+</html>
