@@ -8,6 +8,7 @@
     <meta name="apple-mobile-web-app-title" content="Kwayview">
     <meta name="theme-color" content="#0a0a0f">
     <title>Welcome to Kwayview</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon.png">
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-192.png">
     <style>
@@ -184,6 +185,74 @@
         [data-theme="light"] .demo-card {
             background: rgba(255, 255, 255, 0.6);
             border-color: rgba(59, 130, 246, 0.2);
+        }
+
+        .demo-view-content {
+            display: none;
+        }
+
+        .demo-view-content.active {
+            display: block;
+        }
+
+        .demo-month-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+            margin-top: 8px;
+        }
+
+        .demo-month-day {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            border-radius: 4px;
+            color: var(--text-secondary);
+        }
+
+        .demo-month-day.today {
+            background: var(--accent);
+            color: white;
+        }
+
+        .demo-quarter-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .demo-quarter-month {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            padding: 8px;
+            text-align: center;
+            font-size: 0.75rem;
+        }
+
+        [data-theme="light"] .demo-quarter-month {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        .demo-year-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+            margin-top: 8px;
+        }
+
+        .demo-year-month {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+            padding: 6px;
+            text-align: center;
+            font-size: 0.65rem;
+        }
+
+        [data-theme="light"] .demo-year-month {
+            background: rgba(0, 0, 0, 0.05);
         }
 
         .demo-card-header {
@@ -373,17 +442,100 @@
                     <button class="demo-view-btn" data-view="quarter">Quarter</button>
                     <button class="demo-view-btn" data-view="year">Year</button>
                 </div>
-                <div class="demo-card">
-                    <div class="demo-card-header">
-                        <span class="demo-card-day">Monday</span>
+
+                <!-- Week View (Default) -->
+                <div class="demo-view-content active" data-view-content="week">
+                    <div class="demo-card">
+                        <div class="demo-card-header">
+                            <span class="demo-card-day">Monday</span>
+                        </div>
+                        <div class="demo-entry">
+                            <div class="demo-checkbox"></div>
+                            <div class="demo-entry-text">Team meeting at 10am</div>
+                        </div>
+                        <div class="demo-entry">
+                            <div class="demo-checkbox"></div>
+                            <div class="demo-entry-text">Finish project proposal</div>
+                        </div>
                     </div>
-                    <div class="demo-entry">
-                        <div class="demo-checkbox"></div>
-                        <div class="demo-entry-text">Team meeting at 10am</div>
+                </div>
+
+                <!-- Month View -->
+                <div class="demo-view-content" data-view-content="month">
+                    <div class="demo-card">
+                        <div class="demo-card-header">
+                            <span class="demo-card-day">January 2026</span>
+                        </div>
+                        <div class="demo-month-grid">
+                            <div class="demo-month-day">1</div>
+                            <div class="demo-month-day">2</div>
+                            <div class="demo-month-day">3</div>
+                            <div class="demo-month-day">4</div>
+                            <div class="demo-month-day">5</div>
+                            <div class="demo-month-day">6</div>
+                            <div class="demo-month-day">7</div>
+                            <div class="demo-month-day">8</div>
+                            <div class="demo-month-day">9</div>
+                            <div class="demo-month-day">10</div>
+                            <div class="demo-month-day">11</div>
+                            <div class="demo-month-day">12</div>
+                            <div class="demo-month-day">13</div>
+                            <div class="demo-month-day">14</div>
+                            <div class="demo-month-day">15</div>
+                            <div class="demo-month-day">16</div>
+                            <div class="demo-month-day today">17</div>
+                            <div class="demo-month-day">18</div>
+                            <div class="demo-month-day">19</div>
+                            <div class="demo-month-day">20</div>
+                            <div class="demo-month-day">21</div>
+                            <div class="demo-month-day">22</div>
+                            <div class="demo-month-day">23</div>
+                            <div class="demo-month-day">24</div>
+                            <div class="demo-month-day">25</div>
+                            <div class="demo-month-day">26</div>
+                            <div class="demo-month-day">27</div>
+                            <div class="demo-month-day">28</div>
+                            <div class="demo-month-day">29</div>
+                            <div class="demo-month-day">30</div>
+                            <div class="demo-month-day">31</div>
+                        </div>
                     </div>
-                    <div class="demo-entry">
-                        <div class="demo-checkbox"></div>
-                        <div class="demo-entry-text">Finish project proposal</div>
+                </div>
+
+                <!-- Quarter View -->
+                <div class="demo-view-content" data-view-content="quarter">
+                    <div class="demo-card">
+                        <div class="demo-card-header">
+                            <span class="demo-card-day">Q1 2026</span>
+                        </div>
+                        <div class="demo-quarter-grid">
+                            <div class="demo-quarter-month">January</div>
+                            <div class="demo-quarter-month">February</div>
+                            <div class="demo-quarter-month">March</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Year View -->
+                <div class="demo-view-content" data-view-content="year">
+                    <div class="demo-card">
+                        <div class="demo-card-header">
+                            <span class="demo-card-day">2026</span>
+                        </div>
+                        <div class="demo-year-grid">
+                            <div class="demo-year-month">Jan</div>
+                            <div class="demo-year-month">Feb</div>
+                            <div class="demo-year-month">Mar</div>
+                            <div class="demo-year-month">Apr</div>
+                            <div class="demo-year-month">May</div>
+                            <div class="demo-year-month">Jun</div>
+                            <div class="demo-year-month">Jul</div>
+                            <div class="demo-year-month">Aug</div>
+                            <div class="demo-year-month">Sep</div>
+                            <div class="demo-year-month">Oct</div>
+                            <div class="demo-year-month">Nov</div>
+                            <div class="demo-year-month">Dec</div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -592,8 +744,20 @@
         // View switcher demo
         document.querySelectorAll('.demo-view-btn').forEach(btn => {
             btn.addEventListener('click', () => {
+                const view = btn.getAttribute('data-view');
+
+                // Update button states
                 document.querySelectorAll('.demo-view-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
+
+                // Update view content
+                document.querySelectorAll('.demo-view-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+                const targetView = document.querySelector(`[data-view-content="${view}"]`);
+                if (targetView) {
+                    targetView.classList.add('active');
+                }
             });
         });
 
@@ -633,7 +797,7 @@
         function setupSwipeDemo() {
             const swipeDemo = document.getElementById('swipeDemo');
             if (!swipeDemo) return;
-            
+
             let swipeStartX = 0;
             let swipeCurrentX = 0;
             let isSwiping = false;
@@ -642,7 +806,7 @@
             function resetSwipe() {
                 swipeDemo.style.transform = '';
                 swipeDemo.style.backgroundColor = '';
-                swipeDemo.style.transition = '';
+                swipeDemo.style.transition = 'transform 0.4s cubic-bezier(0.4, 0.0, 0.2, 1), background-color 0.4s ease';
                 isSwiping = false;
                 hasSwiped = false;
             }
@@ -663,21 +827,22 @@
                 if (diff > 0) {
                     hasSwiped = true;
                     const translateX = Math.min(diff, 80);
+                    const opacity = Math.min(translateX / 80, 1) * 0.3;
                     swipeDemo.style.transform = `translateX(-${translateX}px)`;
-                    swipeDemo.style.backgroundColor = 'rgba(239, 68, 68, 0.15)';
+                    swipeDemo.style.backgroundColor = `rgba(239, 68, 68, ${opacity})`;
                 }
             }, { passive: true });
 
             swipeDemo.addEventListener('touchend', () => {
                 if (!isSwiping) return;
                 const diff = swipeStartX - swipeCurrentX;
-                swipeDemo.style.transition = 'transform 0.3s ease, background-color 0.3s ease';
-                
+                swipeDemo.style.transition = 'transform 0.4s cubic-bezier(0.4, 0.0, 0.2, 1), background-color 0.4s ease';
+
                 if (diff > 60 && hasSwiped) {
                     // Swipe successful - show delete state
                     swipeDemo.style.transform = 'translateX(-80px)';
-                    swipeDemo.style.backgroundColor = 'rgba(239, 68, 68, 0.2)';
-                    
+                    swipeDemo.style.backgroundColor = 'rgba(239, 68, 68, 0.3)';
+
                     // Reset after showing
                     setTimeout(() => {
                         resetSwipe();
@@ -706,19 +871,20 @@
                 if (diff > 0) {
                     hasSwiped = true;
                     const translateX = Math.min(diff, 80);
+                    const opacity = Math.min(translateX / 80, 1) * 0.3;
                     swipeDemo.style.transform = `translateX(-${translateX}px)`;
-                    swipeDemo.style.backgroundColor = 'rgba(239, 68, 68, 0.15)';
+                    swipeDemo.style.backgroundColor = `rgba(239, 68, 68, ${opacity})`;
                 }
             });
 
             swipeDemo.addEventListener('mouseup', () => {
                 if (!isSwiping) return;
                 const diff = swipeStartX - swipeCurrentX;
-                swipeDemo.style.transition = 'transform 0.3s ease, background-color 0.3s ease';
-                
+                swipeDemo.style.transition = 'transform 0.4s cubic-bezier(0.4, 0.0, 0.2, 1), background-color 0.4s ease';
+
                 if (diff > 60 && hasSwiped) {
                     swipeDemo.style.transform = 'translateX(-80px)';
-                    swipeDemo.style.backgroundColor = 'rgba(239, 68, 68, 0.2)';
+                    swipeDemo.style.backgroundColor = 'rgba(239, 68, 68, 0.3)';
                     setTimeout(() => {
                         resetSwipe();
                     }, 1500);

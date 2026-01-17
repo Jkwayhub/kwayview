@@ -1,11 +1,11 @@
 {
-    "name": "Weekly Planner",
-    "short_name": "Planner",
-    "description": "A simple weekly planner and diary app",
+    "name": "Kwayview",
+    "short_name": "Kwayview",
+    "description": "Your personal task and schedule manager with multiple view modes",
     "start_url": "/",
     "display": "standalone",
-    "background_color": "#1a1a2e",
-    "theme_color": "#1a1a2e",
+    "background_color": "#0a0a0f",
+    "theme_color": "#3b82f6",
     "orientation": "portrait",
     "icons": [
         {
@@ -19,6 +19,12 @@
             "sizes": "512x512",
             "type": "image/png",
             "purpose": "any maskable"
+        },
+        {
+            "src": "favicon.png",
+            "sizes": "32x32",
+            "type": "image/png",
+            "purpose": "any"
         }
     ]
 }

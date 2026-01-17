@@ -5,13 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Planner">
-    <meta name="theme-color" content="#f5f5f4">
-    <title>Planner</title>
+    <meta name="apple-mobile-web-app-title" content="Kwayview">
+    <meta name="theme-color" content="#3b82f6">
+    <title>Kwayview</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon.png">
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-192.png">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html {
+            width: 100%;
+            height: 100%;
+            position: fixed;
+            overflow: hidden;
+            -webkit-overflow-scrolling: touch;
+        }
 
         :root {
             --bg-gradient: linear-gradient(165deg, #ffffff 0%, #f0f7ff 40%, #dbeafe 100%);
@@ -48,10 +57,14 @@
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: var(--bg-gradient);
+            width: 100%;
+            height: 100%;
             min-height: 100vh;
+            min-height: -webkit-fill-available;
             color: var(--text-primary);
             transition: background 0.3s, color 0.3s;
             position: relative;
+            overflow: hidden;
         }
 
         /* Ambient glow effect */
@@ -88,9 +101,15 @@
             padding: 20px;
             padding-top: max(20px, env(safe-area-inset-top));
             padding-bottom: max(20px, env(safe-area-inset-bottom));
+            width: 100%;
+            height: 100%;
             min-height: 100vh;
+            min-height: -webkit-fill-available;
             position: relative;
             z-index: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
         }
 
         .main-header {
@@ -155,7 +174,10 @@
         .nav-row {
             display: flex;
             align-items: center;
+            justify-content: center;
             gap: 12px;
+            margin-top: 12px;
+            margin-bottom: 20px;
         }
 
         .nav-row button {
@@ -338,7 +360,7 @@
 
         .month-grid { grid-template-columns: repeat(7, 1fr); }
         .quarter-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
-        .year-grid { grid-template-columns: repeat(4, 1fr); gap: 8px; }
+        .year-grid { grid-template-columns: repeat(3, 1fr); gap: 6px; }
 
         .weekday-header {
             font-size: 0.7rem;
@@ -379,7 +401,7 @@
         .month-card, .quarter-month {
             background: var(--bg);
             border-radius: 8px;
-            padding: 12px;
+            padding: 8px;
             cursor: pointer;
             transition: all 0.2s;
         }
@@ -388,8 +410,8 @@
 
         .month-card-name, .quarter-month-name {
             font-weight: 500;
-            font-size: 0.9rem;
-            margin-bottom: 8px;
+            font-size: 0.75rem;
+            margin-bottom: 6px;
         }
 
         .month-card.current .month-card-name,
@@ -406,7 +428,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.65rem;
+            font-size: 0.55rem;
             color: var(--text-muted);
             position: relative;
         }
@@ -1100,6 +1122,50 @@
             margin-bottom: 16px;
             font-size: 0.9rem;
         }
+
+        .undo-toast {
+            position: fixed;
+            bottom: max(20px, env(safe-area-inset-bottom));
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--page-bg);
+            border: 1px solid var(--page-border);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 12px 20px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            z-index: 1000;
+            box-shadow: 0 4px 12px var(--page-shadow);
+            transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+        }
+
+        .undo-toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .undo-toast-text {
+            font-size: 0.9rem;
+            color: var(--text-primary);
+        }
+
+        .undo-toast-btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 6px 16px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .undo-toast-btn:hover {
+            background: #2563eb;
+        }
     </style>
 </head>
 <body>
@@ -1110,23 +1176,24 @@
                 <span class="user-name-label" id="userNameLabel"></span>
             </div>
             <div class="header-center">
-                <div class="nav-row">
-                    <button id="prevPeriod">‹</button>
-                    <span class="period-label" id="periodLabel"></span>
-                    <button id="nextPeriod">›</button>
-                </div>
             </div>
             <div class="header-right">
-                <button class="logout-btn" id="logoutBtn">Log out</button>
                 <button class="theme-toggle" id="themeToggle">◐</button>
+                <button class="logout-btn" id="logoutBtn">Log out</button>
             </div>
         </div>
-        
+
         <div class="view-switcher">
             <button class="view-btn active" data-view="week">Week</button>
             <button class="view-btn" data-view="month">Month</button>
             <button class="view-btn" data-view="quarter">Quarter</button>
             <button class="view-btn" data-view="year">Year</button>
+        </div>
+
+        <div class="nav-row">
+            <button id="prevPeriod">‹</button>
+            <span class="period-label" id="periodLabel"></span>
+            <button id="nextPeriod">›</button>
         </div>
 
         <div id="viewContainer"></div>
@@ -1535,24 +1602,109 @@
             showSaveIndicator();
         }
 
+        let pendingDelete = null;
+        let deleteTimeout = null;
+
         async function deleteEntry(dateKey, entryId) {
             const { error } = await supabaseClient
                 .from('entries')
                 .delete()
                 .eq('id', entryId);
-            
+
             if (error) {
                 console.error('Error deleting entry:', error);
                 return;
             }
-            
+
             entriesCache[dateKey] = entriesCache[dateKey].filter(e => e.id !== entryId);
             if (entriesCache[dateKey].length === 0) {
                 delete entriesCache[dateKey];
             }
-            
+
             showSaveIndicator();
         }
+
+        function deleteEntryWithUndo(dateKey, entryId) {
+            // Cancel any existing pending delete
+            if (deleteTimeout) {
+                clearTimeout(deleteTimeout);
+            }
+
+            // Store the entry data before removing from cache
+            const entries = entriesCache[dateKey];
+            const entry = entries.find(e => e.id === entryId);
+            if (!entry) return;
+
+            pendingDelete = {
+                dateKey: dateKey,
+                entryId: entryId,
+                entry: {...entry}
+            };
+
+            // Remove from cache immediately (will be restored if undone)
+            entriesCache[dateKey] = entriesCache[dateKey].filter(e => e.id !== entryId);
+            if (entriesCache[dateKey].length === 0) {
+                delete entriesCache[dateKey];
+            }
+
+            // Show undo toast
+            const toast = document.getElementById('undoToast');
+            toast.classList.add('show');
+
+            // Set timeout to permanently delete after 4 seconds
+            deleteTimeout = setTimeout(async () => {
+                if (pendingDelete) {
+                    await deleteEntry(pendingDelete.dateKey, pendingDelete.entryId);
+                    pendingDelete = null;
+                }
+                toast.classList.remove('show');
+            }, 4000);
+        }
+
+        function undoDelete() {
+            if (!pendingDelete) return;
+
+            // Clear the delete timeout
+            if (deleteTimeout) {
+                clearTimeout(deleteTimeout);
+                deleteTimeout = null;
+            }
+
+            // Restore the entry to cache
+            const { dateKey, entry } = pendingDelete;
+            if (!entriesCache[dateKey]) {
+                entriesCache[dateKey] = [];
+            }
+
+            // Insert back in correct position (completed items go at end)
+            if (entry.completed) {
+                entriesCache[dateKey].push(entry);
+            } else {
+                // Insert at beginning with other non-completed items
+                const firstCompletedIndex = entriesCache[dateKey].findIndex(e => e.completed);
+                if (firstCompletedIndex === -1) {
+                    entriesCache[dateKey].push(entry);
+                } else {
+                    entriesCache[dateKey].splice(firstCompletedIndex, 0, entry);
+                }
+            }
+
+            pendingDelete = null;
+
+            // Hide toast
+            const toast = document.getElementById('undoToast');
+            toast.classList.remove('show');
+
+            // Re-render current view
+            if (currentDayDate === dateKey) {
+                renderDayEntries();
+            } else {
+                render();
+            }
+        }
+
+        // Setup undo button
+        document.getElementById('undoBtn').addEventListener('click', undoDelete);
 
         function hasEntries(dateKey) {
             const entries = entriesCache[dateKey];
@@ -1972,11 +2124,11 @@
                     if (!isDragging) return;
                     isDragging = false;
                     const diff = startX - currentX;
-                    
+
                     if (diff > 60) {
                         item.classList.add('deleting');
-                        setTimeout(async () => {
-                            await deleteEntry(currentDayDate, parseInt(item.dataset.id));
+                        setTimeout(() => {
+                            deleteEntryWithUndo(currentDayDate, parseInt(item.dataset.id));
                             renderDayEntries();
                         }, 200);
                     } else {
@@ -2054,8 +2206,8 @@
                         isDragging = false;
                         if (startX - currentX > 60) {
                             item.classList.add('deleting');
-                            setTimeout(async () => {
-                                await deleteEntry(item.dataset.date, parseInt(item.dataset.id));
+                            setTimeout(() => {
+                                deleteEntryWithUndo(item.dataset.date, parseInt(item.dataset.id));
                                 openCompletedView();
                             }, 200);
                         } else {
@@ -2448,5 +2600,10 @@
             navigator.serviceWorker.register('sw.js').catch(() => {});
         }
     </script>
+
+    <div class="undo-toast" id="undoToast">
+        <span class="undo-toast-text">Task deleted</span>
+        <button class="undo-toast-btn" id="undoBtn">Undo</button>
+    </div>
 </body>
 </html>
