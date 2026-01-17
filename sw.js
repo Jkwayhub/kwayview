@@ -1,4 +1,4 @@
-const CACHE_NAME = 'planner-v2-vercel';
+const CACHE_NAME = 'planner-v3-vercel-ssl';
 const ASSETS = [
     '/',
     '/index.html',
