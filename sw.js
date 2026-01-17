@@ -1,4 +1,4 @@
-const CACHE_NAME = 'planner-v1';
+const CACHE_NAME = 'planner-v2-vercel';
 const ASSETS = [
     '/',
     '/index.html',
@@ -30,6 +30,11 @@ self.addEventListener('activate', event => {
 
 // Fetch event - serve from cache, fallback to network
 self.addEventListener('fetch', event => {
+    // Skip non-GET requests
+    if (event.request.method !== 'GET') {
+        return;
+    }
+
     event.respondWith(
         caches.match(event.request)
             .then(response => {
@@ -45,6 +50,10 @@ self.addEventListener('fetch', event => {
                         caches.open(CACHE_NAME)
                             .then(cache => cache.put(event.request, responseToCache));
                         return response;
+                    })
+                    .catch(error => {
+                        // Network failed, try to return cached version
+                        return caches.match(event.request);
                     });
             })
     );
