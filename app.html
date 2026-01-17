@@ -1366,6 +1366,11 @@
         </div>
     </div>
 
+    <div class="undo-toast" id="undoToast">
+        <span class="undo-toast-text">Task deleted</span>
+        <button class="undo-toast-btn" id="undoBtn">Undo</button>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
         // Supabase client
@@ -2600,10 +2605,5 @@
             navigator.serviceWorker.register('sw.js').catch(() => {});
         }
     </script>
-
-    <div class="undo-toast" id="undoToast">
-        <span class="undo-toast-text">Task deleted</span>
-        <button class="undo-toast-btn" id="undoBtn">Undo</button>
-    </div>
 </body>
 </html>
