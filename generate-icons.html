@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generate Kwayview Icons</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            padding: 40px;
+            max-width: 1000px;
+            margin: 0 auto;
+            background: linear-gradient(165deg, #0a0a0f 0%, #0d1220 40%, #1a1a2e 100%);
+            color: #f0f0f0;
+            min-height: 100vh;
+        }
+        h1 { margin-bottom: 10px; color: #3b82f6; }
+        .subtitle { color: #94a3b8; margin-bottom: 30px; }
+        .icon-preview {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .icon-item {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .icon-item canvas {
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 12px;
+            background: #0a0a0f;
+        }
+        .icon-item p {
+            margin-top: 12px;
+            font-size: 14px;
+            color: #94a3b8;
+        }
+        .buttons {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        button:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+        }
+        #status {
+            margin-top: 30px;
+            padding: 16px;
+            border-radius: 8px;
+            display: none;
+            text-align: center;
+        }
+        #status.success {
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            color: #22c55e;
+            display: block;
+        }
+        .instructions {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 40px;
+        }
+        .instructions h3 {
+            color: #3b82f6;
+            margin-bottom: 12px;
+        }
+        .instructions ol {
+            margin-left: 20px;
+            color: #cbd5e1;
+        }
+        .instructions li {
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎨 Kwayview Icon Generator</h1>
+    <p class="subtitle">Sleek, modern logo with your app's color scheme</p>
+
+    <div class="icon-preview">
+        <div class="icon-item">
+            <canvas id="icon192" width="192" height="192"></canvas>
+            <p>192×192 (App Icon)</p>
+        </div>
+        <div class="icon-item">
+            <canvas id="icon512" width="512" height="512"></canvas>
+            <p>512×512 (High-Res)</p>
+        </div>
+        <div class="icon-item">
+            <canvas id="favicon" width="32" height="32"></canvas>
+            <p>32×32 (Favicon)</p>
+        </div>
+    </div>
+
+    <div class="buttons">
+        <button onclick="downloadIcon('icon192', '192')">Download 192×192</button>
+        <button onclick="downloadIcon('icon512', '512')">Download 512×512</button>
+        <button onclick="downloadIcon('favicon', '32')">Download Favicon</button>
+        <button onclick="downloadAll()" style="background: #22c55e;">✓ Download All</button>
+    </div>
+
+    <div id="status"></div>
+
+    <div class="instructions">
+        <h3>📋 Next Steps</h3>
+        <ol>
+            <li>Click "Download All" button above</li>
+            <li>The files will download as <code>icon-192.png</code>, <code>icon-512.png</code>, and <code>favicon.png</code></li>
+            <li>Move these files to your <code>/Users/jkway/kwayview</code> folder (replace existing icons)</li>
+            <li>Push to GitHub and deploy - your new logo will appear everywhere!</li>
+        </ol>
+    </div>
+
+    <script>
+        const logoSVG = \`<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0a0a0f"/>
+      <stop offset="40%" stop-color="#0d1220"/>
+      <stop offset="100%" stop-color="#1a1a2e"/>
+    </linearGradient>
+    <linearGradient id="textGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#8b5cf6"/>
+      <stop offset="50%" stop-color="#6366f1"/>
+      <stop offset="100%" stop-color="#3b82f6"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="120" fill="url(#bgGradient)"/>
+  <text x="256" y="300" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif" font-size="110" font-weight="800" fill="url(#textGradient)" text-anchor="middle" letter-spacing="-2">Kwayview</text>
+  <circle cx="370" cy="150" r="12" fill="#3b82f6" opacity="0.8"/>
+</svg>\`;
+
+        function drawLogo(canvasId, size) {
+            const canvas = document.getElementById(canvasId);
+            const ctx = canvas.getContext('2d');
+
+            const img = new Image();
+            const svgBlob = new Blob([logoSVG], {type: 'image/svg+xml;charset=utf-8'});
+            const url = URL.createObjectURL(svgBlob);
+
+            img.onload = function() {
+                ctx.clearRect(0, 0, size, size);
+                ctx.drawImage(img, 0, 0, size, size);
+                URL.revokeObjectURL(url);
+            };
+
+            img.src = url;
+        }
+
+        function downloadIcon(canvasId, size) {
+            const canvas = document.getElementById(canvasId);
+            const link = document.createElement('a');
+            const filename = size === '32' ? 'favicon.png' : \`icon-\${size}.png\`;
+            link.download = filename;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+
+            showStatus('✓ Downloaded ' + filename);
+        }
+
+        function downloadAll() {
+            downloadIcon('icon192', '192');
+            setTimeout(() => downloadIcon('icon512', '512'), 100);
+            setTimeout(() => downloadIcon('favicon', '32'), 200);
+            showStatus('✓ All icons downloaded! Move them to /Users/jkway/kwayview');
+        }
+
+        function showStatus(message) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = 'success';
+            setTimeout(() => {
+                status.style.display = 'none';
+            }, 5000);
+        }
+
+        window.addEventListener('load', () => {
+            drawLogo('icon192', 192);
+            drawLogo('icon512', 512);
+            drawLogo('favicon', 32);
+        });
+    </script>
+</body>
+</html>
