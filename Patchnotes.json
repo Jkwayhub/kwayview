@@ -1,0 +1,58 @@
+[
+  {
+    "version": "1.1.0",
+    "date": "2025-01-28",
+    "title": "Improved task management & navigation",
+    "isLatest": true,
+    "changes": [
+      {
+        "text": "Tap anywhere on completed tasks to uncomplete them",
+        "image": null
+      },
+      {
+        "text": "Swipe left to delete now works consistently everywhere",
+        "image": null
+      },
+      {
+        "text": "Fixed undo toast not disappearing on iPhone",
+        "image": null
+      },
+      {
+        "text": "Delete indicator now shows properly in onboarding",
+        "image": null
+      },
+      {
+        "text": "Added patch notes page to track updates",
+        "image": null
+      }
+    ]
+  },
+  {
+    "version": "1.0.0",
+    "date": "2025-01-15",
+    "title": "Initial release",
+    "isLatest": false,
+    "changes": [
+      {
+        "text": "Week, month, quarter, and year views",
+        "image": null
+      },
+      {
+        "text": "Task completion with swipe-to-delete",
+        "image": null
+      },
+      {
+        "text": "Dark and light mode with auto-detection",
+        "image": null
+      },
+      {
+        "text": "Cloud sync across devices",
+        "image": null
+      },
+      {
+        "text": "Offline support as a PWA",
+        "image": null
+      }
+    ]
+  }
+]

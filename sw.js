@@ -1,8 +1,11 @@
-const CACHE_NAME = 'planner-v3-vercel-ssl';
+const CACHE_NAME = 'planner-v4-patch-notes';
 const ASSETS = [
     '/',
     '/index.html',
+    '/app.html',
+    '/onboarding.html',
     '/manifest.json',
+    '/patch-notes.json',
     '/icon-192.png',
     '/icon-512.png'
 ];

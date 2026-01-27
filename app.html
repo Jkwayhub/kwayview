@@ -542,6 +542,11 @@
 
         .entry-item.completed {
             opacity: 0.6;
+            cursor: pointer;
+        }
+
+        .entry-item.completed:hover {
+            opacity: 0.75;
         }
 
         .entry-item.completed .entry-text {
@@ -1139,11 +1144,15 @@
             gap: 16px;
             z-index: 1000;
             box-shadow: 0 4px 12px var(--page-shadow);
-            transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+            transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1), opacity 0.3s ease;
+            opacity: 0;
+            visibility: hidden;
         }
 
         .undo-toast.show {
             transform: translateX(-50%) translateY(0);
+            opacity: 1;
+            visibility: visible;
         }
 
         .undo-toast-text {
@@ -1177,20 +1186,175 @@
             background-clip: text;
             user-select: none;
         }
+
+        /* Patch Notes Styles */
+        .patch-notes-loading {
+            text-align: center;
+            color: var(--text-muted);
+            padding: 40px;
+        }
+
+        .patch-version {
+            margin-bottom: 32px;
+        }
+
+        .patch-version-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .patch-version-number {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .patch-version-badge {
+            background: var(--accent);
+            color: white;
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .patch-version-date {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: auto;
+        }
+
+        .patch-version-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+        }
+
+        .patch-changes {
+            list-style: none;
+        }
+
+        .patch-change-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 8px 0;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            border-bottom: 1px solid var(--page-border);
+        }
+
+        .patch-change-item:last-child {
+            border-bottom: none;
+        }
+
+        .patch-change-bullet {
+            color: var(--accent);
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .patch-change-text {
+            flex: 1;
+            line-height: 1.5;
+        }
+
+        .patch-divider {
+            height: 1px;
+            background: var(--page-border);
+            margin: 24px 0;
+        }
+
+        /* Default View Options */
+        .view-options {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .view-option {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px;
+            background: var(--page-bg);
+            border: 2px solid var(--page-border);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .view-option:hover {
+            border-color: var(--accent);
+        }
+
+        .view-option input {
+            display: none;
+        }
+
+        .view-option-content {
+            flex: 1;
+        }
+
+        .view-option-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 2px;
+        }
+
+        .view-option-desc {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .view-option-check {
+            width: 22px;
+            height: 22px;
+            border: 2px solid var(--page-border);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.2s ease;
+        }
+
+        .view-option input:checked ~ .view-option-check {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .view-option input:checked ~ .view-option-check::after {
+            content: '✓';
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .view-option:has(input:checked) {
+            border-color: var(--accent);
+            background: var(--accent-light);
+        }
     </style>
 </head>
 <body>
     <div class="main-view" id="mainView">
         <div class="main-header">
             <div class="header-left">
-                <button class="menu-btn" id="menuBtn">☰</button>
+                <button class="menu-btn" id="menuBtn">â˜°</button>
                 <span class="user-name-label" id="userNameLabel"></span>
             </div>
             <div class="header-center">
                 <div class="app-logo">Kwayview</div>
             </div>
             <div class="header-right">
-                <button class="theme-toggle" id="themeToggle">◐</button>
+                <button class="theme-toggle" id="themeToggle">â—</button>
                 <button class="logout-btn" id="logoutBtn">Log out</button>
             </div>
         </div>
@@ -1203,9 +1367,9 @@
         </div>
 
         <div class="nav-row">
-            <button id="prevPeriod">‹</button>
+            <button id="prevPeriod">â€¹</button>
             <span class="period-label" id="periodLabel"></span>
-            <button id="nextPeriod">›</button>
+            <button id="nextPeriod">â€º</button>
         </div>
 
         <div id="viewContainer"></div>
@@ -1213,7 +1377,7 @@
 
     <div class="day-view" id="dayView">
         <div class="day-header">
-            <button class="back-btn" id="backBtn">‹</button>
+            <button class="back-btn" id="backBtn">â€¹</button>
             <div class="day-title">
                 <div class="day-title-name" id="dayTitleName"></div>
                 <div class="day-title-date" id="dayTitleDate"></div>
@@ -1223,8 +1387,8 @@
             <div class="entries-list" id="entriesList"></div>
         </div>
         <div class="day-nav-floating">
-            <button id="prevDay">← Prev</button>
-            <button id="nextDay">Next →</button>
+            <button id="prevDay">â† Prev</button>
+            <button id="nextDay">Next â†’</button>
         </div>
         <div class="add-entry-bar">
             <textarea class="add-entry-input" id="addEntryInput" placeholder="Add an entry..." rows="1"></textarea>
@@ -1234,7 +1398,7 @@
 
     <div class="completed-view" id="completedView">
         <div class="completed-header">
-            <button class="back-btn" id="completedBackBtn">‹</button>
+            <button class="back-btn" id="completedBackBtn">â€¹</button>
             <div class="completed-title">
                 <div class="completed-title-text">Completed</div>
                 <div class="completed-title-sub" id="completedPeriodLabel"></div>
@@ -1252,25 +1416,29 @@
     <div class="side-panel" id="sidePanel">
         <div class="side-panel-header">
             <div class="side-panel-title">Menu</div>
-            <button class="side-panel-close" id="sidePanelClose">×</button>
+            <button class="side-panel-close" id="sidePanelClose">Ã—</button>
         </div>
         <div class="side-panel-content">
             <div class="side-panel-item" id="homeBtn">
-                <div class="side-panel-item-icon">🏠</div>
+                <div class="side-panel-item-icon">ðŸ </div>
                 <div class="side-panel-item-text">Home</div>
             </div>
+            <div class="side-panel-item" id="patchNotesBtn">
+                <div class="side-panel-item-icon">📋</div>
+                <div class="side-panel-item-text">Patch Notes</div>
+            </div>
             <div class="side-panel-item" id="onboardingHelpBtn">
-                <div class="side-panel-item-icon">📚</div>
+                <div class="side-panel-item-icon">ðŸ“š</div>
                 <div class="side-panel-item-text">Onboarding Help</div>
             </div>
             <div class="side-panel-item" id="reportIssueBtn">
-                <div class="side-panel-item-icon">🐛</div>
+                <div class="side-panel-item-icon">ðŸ›</div>
                 <div class="side-panel-item-text">Report an Issue</div>
             </div>
         </div>
         <div class="side-panel-footer">
             <div class="side-panel-item" id="accountBtn">
-                <div class="side-panel-item-icon">⚙️</div>
+                <div class="side-panel-item-icon">âš™ï¸</div>
                 <div class="side-panel-item-text">Account</div>
             </div>
         </div>
@@ -1279,21 +1447,25 @@
     <!-- Account Settings Panel -->
     <div class="side-panel" id="accountPanel">
         <div class="side-panel-header">
-            <button class="side-panel-close" id="accountBackBtn" style="margin-right: auto;">‹</button>
+            <button class="side-panel-close" id="accountBackBtn" style="margin-right: auto;">â€¹</button>
             <div class="side-panel-title">Account</div>
             <div style="width: 32px;"></div>
         </div>
         <div class="side-panel-content">
             <div class="side-panel-item" id="changeNameBtn">
-                <div class="side-panel-item-icon">👤</div>
+                <div class="side-panel-item-icon">ðŸ‘¤</div>
                 <div class="side-panel-item-text">Change Name</div>
             </div>
             <div class="side-panel-item" id="changePasswordBtn">
-                <div class="side-panel-item-icon">🔒</div>
+                <div class="side-panel-item-icon">ðŸ”’</div>
                 <div class="side-panel-item-text">Change Password</div>
             </div>
+            <div class="side-panel-item" id="defaultViewBtn">
+                <div class="side-panel-item-icon">📱</div>
+                <div class="side-panel-item-text">Default View</div>
+            </div>
             <div class="side-panel-item" id="clearDataBtn" style="border-color: var(--danger);">
-                <div class="side-panel-item-icon" style="color: var(--danger);">🗑️</div>
+                <div class="side-panel-item-icon" style="color: var(--danger);">ðŸ—‘ï¸</div>
                 <div class="side-panel-item-text" style="color: var(--danger);">Clear All Data</div>
             </div>
         </div>
@@ -1302,7 +1474,7 @@
     <!-- Account Settings Pages -->
     <div class="account-settings-page" id="changeNamePage">
         <div class="account-settings-header">
-            <button class="account-settings-back" id="changeNameBack">‹</button>
+            <button class="account-settings-back" id="changeNameBack">â€¹</button>
             <div class="account-settings-title">Change Name</div>
         </div>
         <div class="account-settings-content">
@@ -1318,7 +1490,7 @@
 
     <div class="account-settings-page" id="changePasswordPage">
         <div class="account-settings-header">
-            <button class="account-settings-back" id="changePasswordBack">‹</button>
+            <button class="account-settings-back" id="changePasswordBack">â€¹</button>
             <div class="account-settings-title">Change Password</div>
         </div>
         <div class="account-settings-content">
@@ -1335,12 +1507,12 @@
 
     <div class="account-settings-page" id="clearDataPage">
         <div class="account-settings-header">
-            <button class="account-settings-back" id="clearDataBack">‹</button>
+            <button class="account-settings-back" id="clearDataBack">â€¹</button>
             <div class="account-settings-title">Clear All Data</div>
         </div>
         <div class="account-settings-content">
             <div class="form-section">
-                <div class="form-section-title">⚠️ Warning</div>
+                <div class="form-section-title">âš ï¸ Warning</div>
                 <div class="form-section-description">This action will permanently delete all your entries and cannot be undone. Your account will remain, but all your planner data will be lost.</div>
                 <div id="clearDataMessage"></div>
                 <button class="account-form-btn account-form-btn-danger" id="clearDataConfirm">Yes, Clear All Data</button>
@@ -1348,10 +1520,67 @@
         </div>
     </div>
 
+    <!-- Default View Page -->
+    <div class="account-settings-page" id="defaultViewPage">
+        <div class="account-settings-header">
+            <button class="account-settings-back" id="defaultViewBack">‹</button>
+            <div class="account-settings-title">Default View</div>
+        </div>
+        <div class="account-settings-content">
+            <div class="form-section">
+                <div class="form-section-title">Choose Your Default View</div>
+                <div class="form-section-description">Select which view the app opens to when you launch it.</div>
+                <div class="view-options" id="viewOptions">
+                    <label class="view-option">
+                        <input type="radio" name="defaultView" value="week">
+                        <div class="view-option-content">
+                            <div class="view-option-title">Week</div>
+                            <div class="view-option-desc">See your current week at a glance</div>
+                        </div>
+                        <div class="view-option-check"></div>
+                    </label>
+                    <label class="view-option">
+                        <input type="radio" name="defaultView" value="today">
+                        <div class="view-option-content">
+                            <div class="view-option-title">Today</div>
+                            <div class="view-option-desc">Jump straight to today's tasks</div>
+                        </div>
+                        <div class="view-option-check"></div>
+                    </label>
+                    <label class="view-option">
+                        <input type="radio" name="defaultView" value="month">
+                        <div class="view-option-content">
+                            <div class="view-option-title">Month</div>
+                            <div class="view-option-desc">Calendar view of the current month</div>
+                        </div>
+                        <div class="view-option-check"></div>
+                    </label>
+                    <label class="view-option">
+                        <input type="radio" name="defaultView" value="quarter">
+                        <div class="view-option-content">
+                            <div class="view-option-title">Quarter</div>
+                            <div class="view-option-desc">Overview of the current quarter</div>
+                        </div>
+                        <div class="view-option-check"></div>
+                    </label>
+                    <label class="view-option">
+                        <input type="radio" name="defaultView" value="year">
+                        <div class="view-option-content">
+                            <div class="view-option-title">Year</div>
+                            <div class="view-option-desc">Full year overview</div>
+                        </div>
+                        <div class="view-option-check"></div>
+                    </label>
+                </div>
+                <div id="defaultViewMessage"></div>
+            </div>
+        </div>
+    </div>
+
     <!-- Report Issue Page -->
     <div class="account-settings-page" id="reportIssuePage">
         <div class="account-settings-header">
-            <button class="account-settings-back" id="reportIssueBack">‹</button>
+            <button class="account-settings-back" id="reportIssueBack">â€¹</button>
             <div class="account-settings-title">Report an Issue</div>
         </div>
         <div class="account-settings-content">
@@ -1363,6 +1592,17 @@
                 <div id="reportIssueMessage"></div>
                 <button class="account-form-btn" id="reportIssueSubmit">Submit Report</button>
             </div>
+        </div>
+    </div>
+
+    <!-- Patch Notes Page -->
+    <div class="account-settings-page" id="patchNotesPage">
+        <div class="account-settings-header">
+            <button class="account-settings-back" id="patchNotesBack">‹</button>
+            <div class="account-settings-title">Patch Notes</div>
+        </div>
+        <div class="account-settings-content" id="patchNotesContent">
+            <div class="patch-notes-loading">Loading...</div>
         </div>
     </div>
 
@@ -1403,6 +1643,7 @@
         let currentDate = new Date();
         let currentDayDate = null;
         let themeMode = localStorage.getItem('themeMode') || 'auto';
+        let userDefaultView = 'week';
 
         // Auth check on load
         async function initAuth() {
@@ -1413,15 +1654,16 @@
                 return;
             }
             
-            // Check if onboarding is completed
+            // Check if onboarding is completed and get default view
             // First check database, then fall back to localStorage
             const { data: prefs } = await supabaseClient
                 .from('user_preferences')
-                .select('onboarding_completed')
+                .select('onboarding_completed, default_view')
                 .eq('user_id', session.user.id)
                 .single();
 
             const onboardingCompleted = prefs?.onboarding_completed || localStorage.getItem('onboardingCompleted') === 'true';
+            userDefaultView = prefs?.default_view || localStorage.getItem('defaultView') || 'week';
 
             // Only redirect to onboarding on first login after signup
             if (!onboardingCompleted) {
@@ -1432,8 +1674,18 @@
             currentUser = session.user;
             updateUserNameLabel();
             await loadAllEntries();
-            // Ensure week view is active and rendered
-            switchView('week');
+            
+            // Apply default view preference
+            if (userDefaultView === 'today') {
+                // Open today's day view
+                const today = new Date();
+                const dateKey = formatDateKey(today);
+                switchView('week');
+                render();
+                openDay(dateKey);
+            } else {
+                switchView(userDefaultView);
+            }
             
             // Ensure side panel is positioned on the left (fix for onboarding redirect)
             const sidePanel = document.getElementById('sidePanel');
@@ -1525,7 +1777,7 @@
             themeMode = themeMode === 'auto' ? 'light' : themeMode === 'light' ? 'dark' : 'auto';
             localStorage.setItem('themeMode', themeMode);
             applyTheme();
-            document.getElementById('themeToggle').textContent = themeMode === 'auto' ? '◐' : themeMode === 'light' ? '○' : '●';
+            document.getElementById('themeToggle').textContent = themeMode === 'auto' ? 'â—' : themeMode === 'light' ? 'â—‹' : 'â—';
         }
 
         window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
@@ -1666,6 +1918,8 @@
 
             // Show undo toast
             const toast = document.getElementById('undoToast');
+            // Force reflow before adding class (helps iOS)
+            toast.offsetHeight;
             toast.classList.add('show');
 
             // Set timeout to permanently delete after 4 seconds
@@ -1674,8 +1928,15 @@
                     await deleteEntry(pendingDelete.dateKey, pendingDelete.entryId);
                     pendingDelete = null;
                 }
-                toast.classList.remove('show');
+                hideUndoToast();
             }, 4000);
+        }
+
+        function hideUndoToast() {
+            const toast = document.getElementById('undoToast');
+            toast.classList.remove('show');
+            // Force reflow to ensure transition triggers on iOS
+            toast.offsetHeight;
         }
 
         function undoDelete() {
@@ -1709,8 +1970,7 @@
             pendingDelete = null;
 
             // Hide toast
-            const toast = document.getElementById('undoToast');
-            toast.classList.remove('show');
+            hideUndoToast();
 
             // Re-render current view
             if (currentDayDate === dateKey) {
@@ -1795,8 +2055,8 @@
                     const weekEnd = new Date(weekStart);
                     weekEnd.setDate(weekEnd.getDate() + 6);
                     label.textContent = isSameMonth(weekStart, weekEnd) 
-                        ? `${weekStart.getDate()} – ${weekEnd.getDate()} ${MONTHS_SHORT[weekStart.getMonth()]}`
-                        : `${weekStart.getDate()} ${MONTHS_SHORT[weekStart.getMonth()]} – ${weekEnd.getDate()} ${MONTHS_SHORT[weekEnd.getMonth()]}`;
+                        ? `${weekStart.getDate()} â€“ ${weekEnd.getDate()} ${MONTHS_SHORT[weekStart.getMonth()]}`
+                        : `${weekStart.getDate()} ${MONTHS_SHORT[weekStart.getMonth()]} â€“ ${weekEnd.getDate()} ${MONTHS_SHORT[weekEnd.getMonth()]}`;
                     break;
                 case 'month':
                     label.textContent = `${MONTHS[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
@@ -1877,7 +2137,7 @@
             if (completedCount > 0) {
                 html += `<div class="completed-link" id="completedLink">
                     <span class="completed-link-text">Completed</span>
-                    <span class="completed-link-count">${completedCount} item${completedCount !== 1 ? 's' : ''} ›</span>
+                    <span class="completed-link-count">${completedCount} item${completedCount !== 1 ? 's' : ''} â€º</span>
                 </div>`;
             }
             
@@ -1930,7 +2190,7 @@
             if (completedCount > 0) {
                 html += `<div class="completed-link" id="completedLink">
                     <span class="completed-link-text">Completed</span>
-                    <span class="completed-link-count">${completedCount} item${completedCount !== 1 ? 's' : ''} ›</span>
+                    <span class="completed-link-count">${completedCount} item${completedCount !== 1 ? 's' : ''} â€º</span>
                 </div>`;
             }
             
@@ -1965,7 +2225,7 @@
             if (completedCount > 0) {
                 html += `<div class="completed-link" id="completedLink">
                     <span class="completed-link-text">Completed</span>
-                    <span class="completed-link-count">${completedCount} item${completedCount !== 1 ? 's' : ''} ›</span>
+                    <span class="completed-link-count">${completedCount} item${completedCount !== 1 ? 's' : ''} â€º</span>
                 </div>`;
             }
             
@@ -2001,7 +2261,7 @@
             if (completedCount > 0) {
                 html += `<div class="completed-link" id="completedLink">
                     <span class="completed-link-text">Completed</span>
-                    <span class="completed-link-count">${completedCount} item${completedCount !== 1 ? 's' : ''} ›</span>
+                    <span class="completed-link-count">${completedCount} item${completedCount !== 1 ? 's' : ''} â€º</span>
                 </div>`;
             }
             
@@ -2100,6 +2360,7 @@
         function setupEntryListeners() {
             const list = document.getElementById('entriesList');
             
+            // Checkbox click - only for incomplete tasks to complete them
             list.querySelectorAll('.entry-checkbox').forEach(checkbox => {
                 checkbox.addEventListener('click', async (e) => {
                     e.stopPropagation();
@@ -2113,15 +2374,33 @@
                 });
             });
             
-            // Swipe to delete
+            // Tap anywhere on completed items to uncomplete
+            list.querySelectorAll('.entry-item.completed').forEach(item => {
+                item.addEventListener('click', async (e) => {
+                    // Don't trigger if swiping
+                    if (item.classList.contains('swiping')) return;
+                    
+                    const id = parseInt(item.dataset.id);
+                    item.classList.add('completing');
+                    setTimeout(async () => {
+                        await toggleEntry(currentDayDate, id);
+                        renderDayEntries();
+                    }, 300);
+                });
+            });
+            
+            // Swipe to delete (works for both completed and incomplete)
             list.querySelectorAll('.entry-item').forEach(item => {
                 let startX = 0;
                 let currentX = 0;
                 let isDragging = false;
+                let hasMoved = false;
                 
                 item.addEventListener('touchstart', (e) => {
                     startX = e.touches[0].clientX;
+                    currentX = startX;
                     isDragging = true;
+                    hasMoved = false;
                     item.classList.remove('swiping');
                 }, { passive: true });
                 
@@ -2131,6 +2410,7 @@
                     const diff = startX - currentX;
                     
                     if (diff > 10) {
+                        hasMoved = true;
                         item.classList.add('swiping');
                         const translate = Math.min(Math.max(0, diff), 80);
                         item.style.transform = `translateX(-${translate}px)`;
@@ -2142,7 +2422,7 @@
                     isDragging = false;
                     const diff = startX - currentX;
 
-                    if (diff > 60) {
+                    if (diff > 60 && hasMoved) {
                         item.classList.add('deleting');
                         setTimeout(() => {
                             deleteEntryWithUndo(currentDayDate, parseInt(item.dataset.id));
@@ -2188,24 +2468,32 @@
                     </div>
                 `).join('');
                 
-                // Setup listeners for uncompleting and deleting
-                list.querySelectorAll('.entry-checkbox').forEach(checkbox => {
-                    checkbox.addEventListener('click', async () => {
-                        const id = parseInt(checkbox.dataset.id);
-                        const dateKey = checkbox.dataset.date;
-                        await toggleEntry(dateKey, id);
-                        openCompletedView();
-                    });
-                });
-                
+                // Tap anywhere on completed items to uncomplete
                 list.querySelectorAll('.entry-item').forEach(item => {
                     let startX = 0;
                     let currentX = 0;
                     let isDragging = false;
+                    let hasMoved = false;
                     
+                    // Tap to uncomplete (only if not swiping)
+                    item.addEventListener('click', async (e) => {
+                        if (item.classList.contains('swiping') || hasMoved) return;
+                        
+                        const id = parseInt(item.dataset.id);
+                        const dateKey = item.dataset.date;
+                        item.classList.add('completing');
+                        setTimeout(async () => {
+                            await toggleEntry(dateKey, id);
+                            openCompletedView();
+                        }, 300);
+                    });
+                    
+                    // Swipe to delete
                     item.addEventListener('touchstart', (e) => {
                         startX = e.touches[0].clientX;
+                        currentX = startX;
                         isDragging = true;
+                        hasMoved = false;
                     }, { passive: true });
                     
                     item.addEventListener('touchmove', (e) => {
@@ -2213,6 +2501,7 @@
                         currentX = e.touches[0].clientX;
                         const diff = startX - currentX;
                         if (diff > 10) {
+                            hasMoved = true;
                             item.classList.add('swiping');
                             item.style.transform = `translateX(-${Math.min(diff, 80)}px)`;
                         }
@@ -2221,7 +2510,7 @@
                     item.addEventListener('touchend', async () => {
                         if (!isDragging) return;
                         isDragging = false;
-                        if (startX - currentX > 60) {
+                        if (startX - currentX > 60 && hasMoved) {
                             item.classList.add('deleting');
                             setTimeout(() => {
                                 deleteEntryWithUndo(item.dataset.date, parseInt(item.dataset.id));
@@ -2350,6 +2639,17 @@
             document.getElementById('clearDataMessage').innerHTML = '';
         });
         
+        document.getElementById('defaultViewBtn').addEventListener('click', () => {
+            document.getElementById('sidePanelOverlay').classList.remove('open');
+            document.getElementById('accountPanel').classList.remove('open');
+            document.getElementById('defaultViewPage').classList.add('open');
+            document.getElementById('defaultViewMessage').innerHTML = '';
+            // Set the current selection
+            const currentDefault = userDefaultView || 'week';
+            const radio = document.querySelector(`input[name="defaultView"][value="${currentDefault}"]`);
+            if (radio) radio.checked = true;
+        });
+        
         // Account settings - back buttons
         document.getElementById('changeNameBack').addEventListener('click', () => {
             document.getElementById('changeNamePage').classList.remove('open');
@@ -2363,10 +2663,48 @@
             document.getElementById('accountPanel').classList.add('open');
         });
         
+        document.getElementById('defaultViewBack').addEventListener('click', () => {
+            document.getElementById('defaultViewPage').classList.remove('open');
+            document.getElementById('sidePanelOverlay').classList.add('open');
+            document.getElementById('accountPanel').classList.add('open');
+        });
+        
         document.getElementById('clearDataBack').addEventListener('click', () => {
             document.getElementById('clearDataPage').classList.remove('open');
             document.getElementById('sidePanelOverlay').classList.add('open');
             document.getElementById('accountPanel').classList.add('open');
+        });
+        
+        // Default view option change - auto save
+        document.querySelectorAll('input[name="defaultView"]').forEach(radio => {
+            radio.addEventListener('change', async (e) => {
+                const newDefault = e.target.value;
+                const messageDiv = document.getElementById('defaultViewMessage');
+                
+                // Save to localStorage immediately
+                localStorage.setItem('defaultView', newDefault);
+                userDefaultView = newDefault;
+                
+                // Save to database
+                const { error } = await supabaseClient
+                    .from('user_preferences')
+                    .upsert({
+                        user_id: currentUser.id,
+                        default_view: newDefault
+                    }, {
+                        onConflict: 'user_id'
+                    });
+                
+                if (error) {
+                    console.error('Error saving default view:', error);
+                    messageDiv.innerHTML = '<div class="error-message">Failed to save. Please try again.</div>';
+                } else {
+                    messageDiv.innerHTML = '<div class="success-message">Default view updated!</div>';
+                    setTimeout(() => {
+                        messageDiv.innerHTML = '';
+                    }, 2000);
+                }
+            });
         });
         
         // Account settings - submit handlers
@@ -2476,6 +2814,62 @@
             document.getElementById('sidePanel').classList.remove('open');
             window.location.href = 'onboarding.html';
         });
+        
+        // Patch notes
+        document.getElementById('patchNotesBtn').addEventListener('click', () => {
+            document.getElementById('sidePanel').classList.remove('open');
+            document.getElementById('patchNotesPage').classList.add('open');
+            loadPatchNotes();
+        });
+        
+        document.getElementById('patchNotesBack').addEventListener('click', () => {
+            document.getElementById('patchNotesPage').classList.remove('open');
+            document.getElementById('sidePanel').classList.add('open');
+        });
+        
+        async function loadPatchNotes() {
+            const container = document.getElementById('patchNotesContent');
+            
+            try {
+                const response = await fetch('patch-notes.json');
+                const patchNotes = await response.json();
+                
+                let html = '';
+                
+                patchNotes.forEach((version, index) => {
+                    html += `
+                        <div class="patch-version">
+                            <div class="patch-version-header">
+                                <span class="patch-version-number">v${version.version}</span>
+                                ${version.isLatest ? '<span class="patch-version-badge">New</span>' : ''}
+                                <span class="patch-version-date">${formatPatchDate(version.date)}</span>
+                            </div>
+                            <div class="patch-version-title">${escapeHtml(version.title)}</div>
+                            <ul class="patch-changes">
+                                ${version.changes.map(change => `
+                                    <li class="patch-change-item">
+                                        <span class="patch-change-bullet">•</span>
+                                        <span class="patch-change-text">${escapeHtml(change.text)}</span>
+                                    </li>
+                                `).join('')}
+                            </ul>
+                        </div>
+                        ${index < patchNotes.length - 1 ? '<div class="patch-divider"></div>' : ''}
+                    `;
+                });
+                
+                container.innerHTML = html;
+            } catch (error) {
+                console.error('Error loading patch notes:', error);
+                container.innerHTML = '<div class="patch-notes-loading">Failed to load patch notes.</div>';
+            }
+        }
+        
+        function formatPatchDate(dateString) {
+            const date = new Date(dateString);
+            const options = { year: 'numeric', month: 'short', day: 'numeric' };
+            return date.toLocaleDateString('en-US', options);
+        }
         
         // Report issue
         document.getElementById('reportIssueBtn').addEventListener('click', () => {
@@ -2602,7 +2996,7 @@
 
             // Initialize
             applyTheme();
-            document.getElementById('themeToggle').textContent = themeMode === 'auto' ? '◐' : themeMode === 'light' ? '○' : '●';
+            document.getElementById('themeToggle').textContent = themeMode === 'auto' ? 'â—' : themeMode === 'light' ? 'â—‹' : 'â—';
 
             // Run on page load and after a short delay to catch any late-loading issues
             ensurePanelPosition();

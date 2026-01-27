@@ -271,8 +271,13 @@
             display: flex;
             align-items: center;
             gap: 12px;
-            padding: 8px 0;
+            padding: 8px 12px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+            background: transparent;
+            border-radius: 8px;
+            margin: 4px 0;
         }
 
         [data-theme="light"] .demo-entry {
@@ -281,6 +286,27 @@
 
         .demo-entry:last-child {
             border-bottom: none;
+        }
+
+        .demo-delete-bg {
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 80px;
+            background: #dc2626;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.85rem;
+            font-weight: 500;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .demo-entry.swiping .demo-delete-bg {
+            opacity: 1;
         }
 
         .demo-checkbox {
@@ -303,7 +329,7 @@
         }
 
         .demo-checkbox.completed::after {
-            content: '✓';
+            content: 'âœ“';
             color: white;
             font-size: 14px;
             font-weight: bold;
@@ -312,6 +338,10 @@
         .demo-entry-text {
             flex: 1;
             font-size: 0.9rem;
+        }
+
+        .demo-entry.completed {
+            cursor: pointer;
         }
 
         .demo-entry.completed .demo-entry-text {
@@ -546,7 +576,7 @@
             <div class="step-header">
                 <div class="step-number">2</div>
                 <h2 class="step-title">Complete Tasks</h2>
-                <p class="step-description">Tap the empty circle to mark an item as complete. Watch it move to the completed section.</p>
+                <p class="step-description">Tap the circle to mark a task complete. To undo, tap anywhere on a completed task to restore it.</p>
             </div>
             <div class="demo-container">
                 <div class="demo-card">
@@ -563,8 +593,8 @@
                     </div>
                 </div>
                 <div class="swipe-hint">
-                    <span class="swipe-arrow">→</span>
-                    <span>Tap the circle above to complete the task</span>
+                    <span class="swipe-arrow">â†’</span>
+                    <span>Tap the circle to complete, tap the row to undo</span>
                 </div>
             </div>
         </div>
@@ -584,10 +614,11 @@
                     <div class="demo-entry" id="swipeDemo">
                         <div class="demo-checkbox"></div>
                         <div class="demo-entry-text">Swipe me left to delete</div>
+                        <div class="demo-delete-bg">Delete</div>
                     </div>
                 </div>
                 <div class="swipe-hint">
-                    <span class="swipe-arrow">←</span>
+                    <span class="swipe-arrow">â†</span>
                     <span>Swipe left on the item above</span>
                 </div>
             </div>
@@ -768,21 +799,20 @@
             
             if (!checkbox || !entry) return;
             
-            checkbox.addEventListener('click', function() {
+            // Checkbox click - complete the task
+            checkbox.addEventListener('click', function(e) {
+                e.stopPropagation();
+                if (!checkbox.classList.contains('completed')) {
+                    checkbox.classList.add('completed');
+                    entry.classList.add('completed');
+                }
+            });
+            
+            // Entry click - uncomplete if completed
+            entry.addEventListener('click', function() {
                 if (checkbox.classList.contains('completed')) {
                     checkbox.classList.remove('completed');
                     entry.classList.remove('completed');
-                } else {
-                    checkbox.classList.add('completed');
-                    entry.classList.add('completed');
-                    
-                    setTimeout(() => {
-                        entry.style.opacity = '0';
-                        entry.style.transform = 'translateY(-10px)';
-                        setTimeout(() => {
-                            entry.style.display = 'none';
-                        }, 300);
-                    }, 1000);
                 }
             });
         }
@@ -805,8 +835,8 @@
 
             function resetSwipe() {
                 swipeDemo.style.transform = '';
-                swipeDemo.style.backgroundColor = '';
-                swipeDemo.style.transition = 'transform 0.4s cubic-bezier(0.4, 0.0, 0.2, 1), background-color 0.4s ease';
+                swipeDemo.classList.remove('swiping');
+                swipeDemo.style.transition = 'transform 0.4s cubic-bezier(0.4, 0.0, 0.2, 1)';
                 isSwiping = false;
                 hasSwiped = false;
             }
@@ -826,22 +856,20 @@
                 const diff = swipeStartX - swipeCurrentX;
                 if (diff > 0) {
                     hasSwiped = true;
+                    swipeDemo.classList.add('swiping');
                     const translateX = Math.min(diff, 80);
-                    const opacity = Math.min(translateX / 80, 1) * 0.3;
                     swipeDemo.style.transform = `translateX(-${translateX}px)`;
-                    swipeDemo.style.backgroundColor = `rgba(239, 68, 68, ${opacity})`;
                 }
             }, { passive: true });
 
             swipeDemo.addEventListener('touchend', () => {
                 if (!isSwiping) return;
                 const diff = swipeStartX - swipeCurrentX;
-                swipeDemo.style.transition = 'transform 0.4s cubic-bezier(0.4, 0.0, 0.2, 1), background-color 0.4s ease';
+                swipeDemo.style.transition = 'transform 0.4s cubic-bezier(0.4, 0.0, 0.2, 1)';
 
                 if (diff > 60 && hasSwiped) {
                     // Swipe successful - show delete state
                     swipeDemo.style.transform = 'translateX(-80px)';
-                    swipeDemo.style.backgroundColor = 'rgba(239, 68, 68, 0.3)';
 
                     // Reset after showing
                     setTimeout(() => {
@@ -870,21 +898,19 @@
                 const diff = swipeStartX - swipeCurrentX;
                 if (diff > 0) {
                     hasSwiped = true;
+                    swipeDemo.classList.add('swiping');
                     const translateX = Math.min(diff, 80);
-                    const opacity = Math.min(translateX / 80, 1) * 0.3;
                     swipeDemo.style.transform = `translateX(-${translateX}px)`;
-                    swipeDemo.style.backgroundColor = `rgba(239, 68, 68, ${opacity})`;
                 }
             });
 
             swipeDemo.addEventListener('mouseup', () => {
                 if (!isSwiping) return;
                 const diff = swipeStartX - swipeCurrentX;
-                swipeDemo.style.transition = 'transform 0.4s cubic-bezier(0.4, 0.0, 0.2, 1), background-color 0.4s ease';
+                swipeDemo.style.transition = 'transform 0.4s cubic-bezier(0.4, 0.0, 0.2, 1)';
 
                 if (diff > 60 && hasSwiped) {
                     swipeDemo.style.transform = 'translateX(-80px)';
-                    swipeDemo.style.backgroundColor = 'rgba(239, 68, 68, 0.3)';
                     setTimeout(() => {
                         resetSwipe();
                     }, 1500);
